@@ -1,0 +1,21 @@
+[package]
+name = "git-conform"
+version = "0.1.0"
+edition = "2021"
+description = "Keep track of your local git repositories"
+repository = ""
+license = "MIT"
+readme = "README.md"
+keywords = []
+categories = []
+
+[dependencies]
+clap = { version = "4.5.16", features = ["derive"] }
+
+
+[lints.clippy]
+suspicious = "warn"
+complexity = "warn"
+perf = "warn"
+style = "warn"
+pedantic = "warn"
