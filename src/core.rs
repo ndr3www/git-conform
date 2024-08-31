@@ -2,7 +2,7 @@ use crate::utils::APP_NAME;
 
 use std::path::Path;
 
-pub fn scan(dirs: &[String], all: &bool) -> Result<(), String> {
+pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
     let mut dirs_ok = true;
 
     for dir in dirs {

@@ -13,7 +13,7 @@ fn main() {
 
     match cli.get_command() {
         Commands::Scan { dirs, all } => {
-            if let Err(e) = scan(dirs, all) {
+            if let Err(e) = scan(dirs, *all) {
                 handle_error(&e, 1);
             }
         }
