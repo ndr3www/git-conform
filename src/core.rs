@@ -46,6 +46,7 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
     for dir in dirs {
         for entry in WalkDir::new(dir)
                 .follow_links(true)
+                .same_file_system(true)
                 .into_iter()
                 .filter_map(|n| n.ok()) {
             // Check if the path contains .git directory
