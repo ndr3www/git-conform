@@ -39,7 +39,7 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
     }
 
     if !dirs_ok {
-        return Err(String::from("Scan failed"));
+        return Err(String::from("Directories validation failed"));
     }
 
     // Scan the directories
