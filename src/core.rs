@@ -54,11 +54,11 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
                 .filter_map(|n| n.ok()) {
             // Check if the path contains .git directory
             if let Some(path) = entry.path().to_str() {
-                if let Some(path_parent) = path.strip_suffix("/.git") {
+                if let Some(repo_path) = path.strip_suffix("/.git") {
                     // Check if the path is in fact a git repository
 
                     let git_status = Command::new("git")
-                        .args(["-C", path_parent, "status"])
+                        .args(["-C", repo_path, "status"])
                         .stdout(Stdio::null())
                         .stderr(Stdio::null())
                         .status()
@@ -82,7 +82,7 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
 
                             // Add the path of the git repository to the tracking file
                             track_file.write_all(
-                                format!("{path_parent}\r\n")
+                                format!("{repo_path}\r\n")
                                     .as_bytes())
                                 .map_err(|e| format!("{e}"))?;
                         }
