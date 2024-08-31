@@ -1,9 +1,12 @@
 //! Contains the key functionality of the application
 
-use crate::utils::APP_NAME;
+use crate::utils::{APP_NAME, APP_DATA_DIR};
 
 use std::path::Path;
 use std::process::{Command, Stdio};
+use std::fs::{OpenOptions, create_dir_all};
+use std::io::Write;
+use std::ptr::addr_of;
 
 use walkdir::WalkDir;
 
@@ -62,7 +65,27 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
                         .map_err(|e| format!("{e}"))?;
 
                     if git_status.success() {
-                        // TODO: add git repository to the tracking file
+                        unsafe {
+                            let app_data_path = addr_of!(APP_DATA_DIR)
+                                .as_ref()
+                                .unwrap();
+
+                            // Create the application data directory if one doesn't already exist
+                            create_dir_all(app_data_path).map_err(|e| format!("{e}"))?;
+
+                            // Open/create the tracking file for writing
+                            let mut track_file = OpenOptions::new()
+                                .create(true)
+                                .append(true)
+                                .open(app_data_path.to_string() + "/tracked")
+                                .map_err(|e| format!("{e}"))?;
+
+                            // Add the path of the git repository to the tracking file
+                            track_file.write_all(
+                                format!("{path_parent}\r\n")
+                                    .as_bytes())
+                                .map_err(|e| format!("{e}"))?;
+                        }
                     }
                 }
             }
