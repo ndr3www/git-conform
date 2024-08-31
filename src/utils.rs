@@ -1,3 +1,5 @@
+//! Custom helper utilities
+
 use std::process;
 
 pub const APP_NAME: &str = env!("CARGO_PKG_NAME");

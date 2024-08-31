@@ -1,7 +1,10 @@
+//! Contains the key functionality of the application
+
 use crate::utils::APP_NAME;
 
 use std::path::Path;
 
+/// Searches recursively for untracked git repositories and automatically adds them to the tracking file
 pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
     let mut dirs_ok = true;
 

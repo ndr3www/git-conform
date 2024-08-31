@@ -1,3 +1,5 @@
+//! Setup and configuration of the command-line interface
+
 use clap::{Parser, Subcommand};
 
 /// Handles parsing of command line arguments
