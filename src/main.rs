@@ -1,6 +1,12 @@
-use clap::Parser;
+mod core;
+mod utils;
+mod cli;
 
-use git_conform::{Cli, Commands, handle_error, scan};
+use crate::core::scan;
+use crate::utils::handle_error;
+use crate::cli::{Cli, Commands};
+
+use clap::Parser;
 
 fn main() {
     let cli = Cli::parse();
