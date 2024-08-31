@@ -11,6 +11,7 @@ categories = []
 
 [dependencies]
 clap = { version = "4.5.16", features = ["derive"] }
+walkdir = "2"
 
 
 [lints.clippy]
