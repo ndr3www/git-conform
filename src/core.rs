@@ -1,5 +1,8 @@
 //! Contains the key functionality of the application
 
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::missing_panics_doc)]
+
 use crate::utils::{HOME_DIR, APP_NAME, search_for_repos};
 
 use std::path::Path;

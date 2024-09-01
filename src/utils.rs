@@ -1,5 +1,8 @@
 //! Custom helper utilities
 
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::missing_panics_doc)]
+
 use std::process::{Command, Stdio, exit};
 use std::fs::{OpenOptions, create_dir_all};
 use std::io::Write;
