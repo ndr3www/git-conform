@@ -2,8 +2,15 @@ mod core;
 mod utils;
 mod cli;
 
-use crate::core::scan;
-use crate::utils::{APP_NAME, APP_DATA_DIR, APP_TRACK_FILE_PATH, APP_TRACK_FILE, handle_error};
+use crate::core::{scan_dirs, scan_all};
+use crate::utils::{
+    HOME_DIR,
+    APP_NAME,
+    APP_DATA_DIR,
+    APP_TRACK_FILE_PATH,
+    APP_TRACK_FILE,
+    handle_error
+};
 use crate::cli::{Cli, Commands};
 
 use std::fs;
@@ -18,7 +25,9 @@ fn main() {
     if let Some(home_path) = home::home_dir() {
         if let Some(home_path_str) = home_path.to_str() {
             unsafe {
-                APP_DATA_DIR = format!("{home_path_str}/.local/share/{APP_NAME}");
+                HOME_DIR = home_path_str.to_string();
+
+                APP_DATA_DIR = format!("{HOME_DIR}/.local/share/{APP_NAME}");
                 APP_TRACK_FILE_PATH = format!("{APP_DATA_DIR}/tracked");
 
                 if let Ok(s) = fs::read_to_string(addr_of!(APP_TRACK_FILE_PATH).as_ref().unwrap()) {
@@ -34,13 +43,18 @@ fn main() {
         handle_error("Could not find home directory", 1);
     }
 
-    // Handle CLI interactions
+    // Handle command-line interactions
 
     let cli = Cli::parse();
 
     match cli.get_command() {
         Commands::Scan { dirs, all } => {
-            if let Err(e) = scan(dirs, *all) {
+            if *all {
+                if let Err(e) = scan_all() {
+                    handle_error(&e, 2);
+                }
+            }
+            else if let Err(e) = scan_dirs(dirs) {
                 handle_error(&e, 2);
             }
         }
