@@ -36,7 +36,7 @@ fn main() {
             }
         }
         else {
-            handle_error("Home directory path contains invalid UTF-8 characters", 1);
+            handle_error("Could not obtain the home directory path: the path contains invalid UTF-8 characters", 1);
         }
     }
     else {
