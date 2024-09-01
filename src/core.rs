@@ -45,6 +45,21 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
         return Err(String::from("Directories validation failed"));
     }
 
+    // Get the path to the application data directory and the tracking file
+    let app_data_path;
+    unsafe {
+        app_data_path = addr_of!(APP_DATA_DIR)
+            .as_ref()
+            .unwrap();
+    }
+    let track_file_path = app_data_path.to_string() + "/tracked";
+
+    // Get the tracking file contents if it exists
+    let mut track_file_contents = String::new();
+    if let Ok(s) = read_to_string(&track_file_path) {
+        track_file_contents = s;
+    }
+
     // Scan the directories
     for dir in dirs {
         for entry in WalkDir::new(dir)
@@ -55,6 +70,11 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
             // Check if the path contains .git directory
             if let Some(path) = entry.path().to_str() {
                 if let Some(repo_path) = path.strip_suffix("/.git") {
+                    // Check if the tracking file already contains the git repository path
+                    if track_file_contents.contains(repo_path) {
+                        continue;
+                    }
+
                     // Check if the path is in fact a git repository
 
                     let git_status = Command::new("git")
@@ -65,35 +85,21 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
                         .map_err(|e| format!("{e}"))?;
 
                     if git_status.success() {
-                        unsafe {
-                            let app_data_path = addr_of!(APP_DATA_DIR)
-                                .as_ref()
-                                .unwrap();
-                            let track_file_path = app_data_path.to_string() + "/tracked";
+                        // Create the application data directory if one doesn't already exist
+                        create_dir_all(app_data_path).map_err(|e| format!("{e}"))?;
 
-                            // Check if the tracking file already exists and contains the git repository path
-                            if let Ok(track_file_contents) = read_to_string(&track_file_path) {
-                                if track_file_contents.contains(repo_path) {
-                                    continue;
-                                }
-                            }
+                        // Open/create the tracking file for writing
+                        let mut track_file = OpenOptions::new()
+                            .create(true)
+                            .append(true)
+                            .open(&track_file_path)
+                            .map_err(|e| format!("{e}"))?;
 
-                            // Create the application data directory if one doesn't already exist
-                            create_dir_all(app_data_path).map_err(|e| format!("{e}"))?;
-
-                            // Open/create the tracking file for writing
-                            let mut track_file = OpenOptions::new()
-                                .create(true)
-                                .append(true)
-                                .open(track_file_path)
-                                .map_err(|e| format!("{e}"))?;
-
-                            // Add the path of the git repository to the tracking file
-                            track_file.write_all(
-                                format!("{repo_path}\r\n")
-                                    .as_bytes())
-                                .map_err(|e| format!("{e}"))?;
-                        }
+                        // Add the path of the git repository to the tracking file
+                        track_file.write_all(
+                            format!("{repo_path}\r\n")
+                                .as_bytes())
+                            .map_err(|e| format!("{e}"))?;
                     }
                 }
             }
