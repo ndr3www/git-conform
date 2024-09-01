@@ -3,18 +3,27 @@ mod utils;
 mod cli;
 
 use crate::core::scan;
-use crate::utils::{APP_NAME, APP_DATA_DIR, handle_error};
+use crate::utils::{APP_NAME, APP_DATA_DIR, APP_TRACK_FILE_PATH, APP_TRACK_FILE, handle_error};
 use crate::cli::{Cli, Commands};
+
+use std::fs;
+use std::ptr::addr_of;
 
 use clap::Parser;
 
 fn main() {
     // Obtain user's home directory path and use it for
-    // creating a full path to the application data directory
+    // creating a full path to the application data directory,
+    // tracking file and reading the tracking file contents
     if let Some(home_path) = home::home_dir() {
         if let Some(home_path_str) = home_path.to_str() {
             unsafe {
                 APP_DATA_DIR = format!("{home_path_str}/.local/share/{APP_NAME}");
+                APP_TRACK_FILE_PATH = format!("{APP_DATA_DIR}/tracked");
+
+                if let Ok(s) = fs::read_to_string(addr_of!(APP_TRACK_FILE_PATH).as_ref().unwrap()) {
+                    APP_TRACK_FILE = s;
+                }
             }
         }
         else {

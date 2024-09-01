@@ -1,10 +1,10 @@
 //! Contains the key functionality of the application
 
-use crate::utils::{APP_NAME, APP_DATA_DIR};
+use crate::utils::{APP_NAME, APP_DATA_DIR, APP_TRACK_FILE_PATH, APP_TRACK_FILE};
 
 use std::path::Path;
 use std::process::{Command, Stdio};
-use std::fs::{OpenOptions, create_dir_all, read_to_string};
+use std::fs::{OpenOptions, create_dir_all};
 use std::io::Write;
 use std::ptr::addr_of;
 
@@ -45,19 +45,20 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
         return Err(String::from("Directories validation failed"));
     }
 
-    // Get the path to the application data directory and the tracking file
+    // Get the path to the application data directory, tracking file and it's contents
     let app_data_path;
+    let track_file_path;
+    let track_file_contents;
     unsafe {
         app_data_path = addr_of!(APP_DATA_DIR)
             .as_ref()
             .unwrap();
-    }
-    let track_file_path = app_data_path.to_string() + "/tracked";
-
-    // Get the tracking file contents if it exists
-    let mut track_file_contents = String::new();
-    if let Ok(s) = read_to_string(&track_file_path) {
-        track_file_contents = s;
+        track_file_path = addr_of!(APP_TRACK_FILE_PATH)
+            .as_ref()
+            .unwrap();
+        track_file_contents = addr_of!(APP_TRACK_FILE)
+            .as_ref()
+            .unwrap();
     }
 
     // Scan the directories
@@ -92,7 +93,7 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
                         let mut track_file = OpenOptions::new()
                             .create(true)
                             .append(true)
-                            .open(&track_file_path)
+                            .open(track_file_path)
                             .map_err(|e| format!("{e}"))?;
 
                         // Add the path of the git repository to the tracking file
