@@ -40,7 +40,7 @@ fn main() {
         }
     }
     else {
-        handle_error("Could not find home directory", 1);
+        handle_error("Could not find the home directory", 1);
     }
 
     // Handle command-line interactions
