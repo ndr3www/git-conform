@@ -59,19 +59,19 @@ pub fn search_for_repos(dirs: &[String]) -> Result<(), String> {
 
                     if git_status.success() {
                         // Create the application data directory if one doesn't already exist
-                        create_dir_all(app_data_path).map_err(|e| format!("{e}"))?;
+                        create_dir_all(app_data_path).map_err(|e| format!("{app_data_path}: {e}"))?;
 
                         // Open/create the tracking file for writing
                         let mut track_file = OpenOptions::new()
                             .create(true)
                             .append(true)
                             .open(track_file_path)
-                            .map_err(|e| format!("{e}"))?;
+                            .map_err(|e| format!("{track_file_path}: {e}"))?;
 
                         // Add the path of the git repository to the tracking file
                         track_file.write_all(
                             format!("{repo_path}\r\n").as_bytes())
-                            .map_err(|e| format!("{e}"))?;
+                            .map_err(|e| format!("{track_file_path}: {e}"))?;
                     }
                 }
             }
