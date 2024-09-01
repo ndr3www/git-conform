@@ -4,7 +4,7 @@ use crate::utils::{APP_NAME, APP_DATA_DIR};
 
 use std::path::Path;
 use std::process::{Command, Stdio};
-use std::fs::{OpenOptions, create_dir_all};
+use std::fs::{OpenOptions, create_dir_all, read_to_string};
 use std::io::Write;
 use std::ptr::addr_of;
 
@@ -69,6 +69,14 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
                             let app_data_path = addr_of!(APP_DATA_DIR)
                                 .as_ref()
                                 .unwrap();
+                            let track_file_path = app_data_path.to_string() + "/tracked";
+
+                            // Check if the tracking file already exists and contains the git repository path
+                            if let Ok(track_file_contents) = read_to_string(&track_file_path) {
+                                if track_file_contents.contains(repo_path) {
+                                    continue;
+                                }
+                            }
 
                             // Create the application data directory if one doesn't already exist
                             create_dir_all(app_data_path).map_err(|e| format!("{e}"))?;
@@ -77,7 +85,7 @@ pub fn scan(dirs: &[String], all: bool) -> Result<(), String> {
                             let mut track_file = OpenOptions::new()
                                 .create(true)
                                 .append(true)
-                                .open(app_data_path.to_string() + "/tracked")
+                                .open(track_file_path)
                                 .map_err(|e| format!("{e}"))?;
 
                             // Add the path of the git repository to the tracking file
