@@ -3,8 +3,8 @@
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::missing_panics_doc)]
 
-use std::process::{Command, Stdio, exit};
-use std::fs::{OpenOptions, create_dir_all};
+use std::process::{self, Command, Stdio};
+use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::ptr::addr_of;
 
@@ -62,7 +62,7 @@ pub fn search_for_repos(dirs: &[String]) -> Result<(), String> {
 
                     if git_status.success() {
                         // Create the application data directory if one doesn't already exist
-                        create_dir_all(app_data_path).map_err(|e| format!("{app_data_path}: {e}"))?;
+                        fs::create_dir_all(app_data_path).map_err(|e| format!("{app_data_path}: {e}"))?;
 
                         // Open/create the tracking file for writing
                         let mut track_file = OpenOptions::new()
@@ -87,5 +87,5 @@ pub fn search_for_repos(dirs: &[String]) -> Result<(), String> {
 /// Prints given error message to the standard error with application name and then exits the application with specified error code
 pub fn handle_error(error: &str, code: i32) {
     eprintln!("{APP_NAME}: {error}");
-    exit(code);
+    process::exit(code);
 }
