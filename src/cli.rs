@@ -2,7 +2,7 @@
 
 use clap::{Parser, Subcommand};
 
-/// Handles parsing of command line arguments
+/// Handles parsing of command-line arguments
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 #[command(propagate_version = true)]

@@ -19,9 +19,9 @@ use std::ptr::addr_of;
 use clap::Parser;
 
 fn main() {
-    // Obtain user's home directory path and use it for
-    // creating a full path to the application data directory,
-    // tracking file and reading the tracking file contents
+    // Obtain the path to user's home directory,
+    // the application data directory and the tracking file
+    // Also read the tracking file contents
     if let Some(home_path) = home::home_dir() {
         if let Some(home_path_str) = home_path.to_str() {
             unsafe {
