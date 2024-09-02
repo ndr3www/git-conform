@@ -25,6 +25,12 @@ pub fn setup() {
                 APP_DATA_DIR = format!("{HOME_DIR}/.local/share/{APP_NAME}");
                 APP_TRACK_FILE_PATH = format!("{APP_DATA_DIR}/tracked");
 
+                // Create the application data directory if one doesn't already exist
+                match fs::create_dir_all(addr_of!(APP_DATA_DIR).as_ref().unwrap()) {
+                    Ok(()) => (),
+                    Err(e) => handle_error(format!("{APP_DATA_DIR}: {e}").as_str(), 1)
+                };
+
                 if let Ok(str) = fs::read_to_string(addr_of!(APP_TRACK_FILE_PATH).as_ref().unwrap()) {
                     APP_TRACK_FILE.clone_from(&str);
 

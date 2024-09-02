@@ -4,7 +4,7 @@
 #![allow(clippy::missing_panics_doc)]
 
 use std::process::{self, Command, Stdio};
-use std::fs::{self, OpenOptions};
+use std::fs::OpenOptions;
 use std::io::Write;
 use std::ptr::addr_of;
 
@@ -20,14 +20,10 @@ pub static mut HOME_DIR: String = String::new();
 /// Searches recursively in dirs for untracked git repositories and automatically adds them to the tracking file
 #[allow(clippy::redundant_closure_for_method_calls)]
 pub fn search_for_repos(dirs: &[String]) -> Result<(), String> {
-    // Get the path to the application data directory, the tracking file and it's contents
-    let app_data_path;
+    // Get the path to the tracking file and it's contents
     let track_file_path;
     let track_file_contents;
     unsafe {
-        app_data_path = addr_of!(APP_DATA_DIR)
-            .as_ref()
-            .unwrap();
         track_file_path = addr_of!(APP_TRACK_FILE_PATH)
             .as_ref()
             .unwrap();
@@ -61,9 +57,6 @@ pub fn search_for_repos(dirs: &[String]) -> Result<(), String> {
                         .map_err(|e| format!("{e}"))?;
 
                     if git_status.success() {
-                        // Create the application data directory if one doesn't already exist
-                        fs::create_dir_all(app_data_path).map_err(|e| format!("{app_data_path}: {e}"))?;
-
                         // Open/create the tracking file for writing
                         let mut track_file = OpenOptions::new()
                             .create(true)
