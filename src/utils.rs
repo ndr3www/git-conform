@@ -6,33 +6,14 @@
 use std::process::{self, Command, Stdio};
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::ptr::addr_of;
 
 use walkdir::WalkDir;
 
 pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
-pub static mut APP_DATA_DIR: String = String::new();
-pub static mut APP_TRACK_FILE_PATH: String = String::new();
-pub static mut APP_TRACK_FILE: String = String::new();
-
-pub static mut HOME_DIR: String = String::new();
 
 /// Searches recursively in dirs for untracked git repositories and automatically adds them to the tracking file
 #[allow(clippy::redundant_closure_for_method_calls)]
-pub fn search_for_repos(dirs: &[String]) -> Result<(), String> {
-    // Get the path to the tracking file and it's contents
-    let track_file_path;
-    let track_file_contents;
-    unsafe {
-        track_file_path = addr_of!(APP_TRACK_FILE_PATH)
-            .as_ref()
-            .unwrap();
-        track_file_contents = addr_of!(APP_TRACK_FILE)
-            .as_ref()
-            .unwrap();
-    }
-
-    // Scan the directories
+pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
     for dir in dirs {
         for entry in WalkDir::new(dir)
                 .follow_links(true)

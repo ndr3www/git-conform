@@ -3,76 +3,65 @@ mod utils;
 mod cli;
 
 use crate::core::{scan_dirs, scan_all};
-use crate::utils::{
-    HOME_DIR,
-    APP_NAME,
-    APP_DATA_DIR,
-    APP_TRACK_FILE_PATH,
-    APP_TRACK_FILE,
-    handle_error
-};
+use crate::utils::{APP_NAME, handle_error};
 use crate::cli::{Cli, Commands};
 
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
-use std::ptr::addr_of;
 use std::process::{Command, Stdio};
 
 use clap::Parser;
 
 fn main() {
     // Obtain the path to user's home directory,
-    // the application data directory and the tracking file
-    // Also read the tracking file contents
+    // the tracking file and it's contents
+
+    let mut home_dir = String::new();
+    let mut track_file_path = String::new();
+    let mut track_file_contents = String::new();
+
     if let Some(home_path) = home::home_dir() {
         if let Some(home_path_str) = home_path.to_str() {
-            unsafe {
-                HOME_DIR = home_path_str.to_string();
+            home_dir = home_path_str.to_string();
 
-                APP_DATA_DIR = format!("{HOME_DIR}/.local/share/{APP_NAME}");
-                APP_TRACK_FILE_PATH = format!("{APP_DATA_DIR}/tracked");
+            let app_data_dir = format!("{home_dir}/.local/share/{APP_NAME}");
+            track_file_path = format!("{app_data_dir}/tracked");
 
-                // Create the application data directory if one doesn't already exist
-                match fs::create_dir_all(addr_of!(APP_DATA_DIR).as_ref().unwrap()) {
-                    Ok(()) => (),
-                    Err(e) => handle_error(format!("{APP_DATA_DIR}: {e}").as_str(), 1)
-                };
+            // Create the application data directory if one doesn't already exist
+            match fs::create_dir_all(&app_data_dir) {
+                Ok(()) => (),
+                Err(e) => handle_error(format!("{app_data_dir}: {e}").as_str(), 1)
+            };
 
-                if let Ok(str) = fs::read_to_string(addr_of!(APP_TRACK_FILE_PATH).as_ref().unwrap()) {
-                    APP_TRACK_FILE.clone_from(&str);
+            if let Ok(str) = fs::read_to_string(&track_file_path) {
+                track_file_contents.clone_from(&str);
 
-                    // Check if the tracking file is up-to-date and remove obsolete entries if not
-
-                    for line in str.lines() {
-                        if Path::new(format!("{line}/.git").as_str()).exists() {
-                            if let Ok(git_status) = Command::new("git")
-                                .args(["-C", line, "status"])
-                                .stdout(Stdio::null())
-                                .stderr(Stdio::null())
-                                .status() {
-                                if !git_status.success() {
-                                    APP_TRACK_FILE = str.replace(line, "");
-                                }
-                            }
-                            else {
-                                handle_error(format!("{line}: Could not execute git command").as_str(), 1);
+                // Check if the tracking file is up-to-date and remove obsolete entries if not
+                for line in str.lines() {
+                    if Path::new(format!("{line}/.git").as_str()).exists() {
+                        if let Ok(git_status) = Command::new("git")
+                            .args(["-C", line, "status"])
+                            .stdout(Stdio::null())
+                            .stderr(Stdio::null())
+                            .status() {
+                            if !git_status.success() {
+                                track_file_contents = str.replace(line, "");
                             }
                         }
                         else {
-                            APP_TRACK_FILE = str.replace(line, "");
+                            handle_error(format!("{line}: Could not execute git command").as_str(), 1);
                         }
                     }
-
-                    let mut track_file = File::create(
-                        addr_of!(APP_TRACK_FILE_PATH)
-                            .as_ref()
-                            .unwrap())
-                        .unwrap();
-                    match track_file.write_all(APP_TRACK_FILE.as_bytes()) {
-                        Ok(()) => (),
-                        Err(e) => handle_error(format!("{APP_TRACK_FILE_PATH}: {e}").as_str(), 1)
+                    else {
+                        track_file_contents = str.replace(line, "");
                     }
+                }
+
+                let mut track_file = File::create(&track_file_path).unwrap();
+                match track_file.write_all(track_file_contents.as_bytes()) {
+                    Ok(()) => (),
+                    Err(e) => handle_error(format!("{track_file_contents}: {e}").as_str(), 1)
                 }
             }
         }
@@ -91,11 +80,11 @@ fn main() {
     match cli.get_command() {
         Commands::Scan { dirs, all } => {
             if *all {
-                if let Err(e) = scan_all() {
+                if let Err(e) = scan_all(home_dir, track_file_path.as_str(), track_file_contents.as_str()) {
                     handle_error(&e, 2);
                 }
             }
-            else if let Err(e) = scan_dirs(dirs) {
+            else if let Err(e) = scan_dirs(dirs, track_file_path.as_str(), track_file_contents.as_str()) {
                 handle_error(&e, 2);
             }
         }

@@ -3,13 +3,12 @@
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::missing_panics_doc)]
 
-use crate::utils::{HOME_DIR, APP_NAME, search_for_repos};
+use crate::utils::{APP_NAME, search_for_repos};
 
 use std::path::Path;
-use std::ptr::addr_of;
 
 /// Scan specified directories only
-pub fn scan_dirs(dirs: &[String]) -> Result<(), String> {
+pub fn scan_dirs(dirs: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
     // Directories validation
 
     let mut dirs_ok = true;
@@ -42,21 +41,14 @@ pub fn scan_dirs(dirs: &[String]) -> Result<(), String> {
         return Err(String::from("Directories validation failed"));
     }
 
-    search_for_repos(dirs)?;
+    search_for_repos(dirs, track_file_path, track_file_contents)?;
 
     Ok(())
 }
 
 /// Scan all directories in user's /home
-pub fn scan_all() -> Result<(), String> {
-    let home_path;
-    unsafe {
-        home_path = addr_of!(HOME_DIR)
-            .as_ref()
-            .unwrap();
-    }
-
-    search_for_repos(&[home_path.to_owned()])?;
+pub fn scan_all(home_dir: String, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+    search_for_repos(&[home_dir], track_file_path, track_file_contents)?;
 
     Ok(())
 }
