@@ -14,6 +14,8 @@ clap = { version = "4.5.16", features = ["derive"] }
 walkdir = "2"
 home = "0.5.9"
 
+[dev-dependencies]
+serial_test = "*"
 
 [lints.clippy]
 suspicious = "warn"

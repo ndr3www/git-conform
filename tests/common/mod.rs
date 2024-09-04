@@ -1,8 +1,6 @@
 use git_conform::utils::APP_NAME;
 
-use std::fs::{self, File};
-use std::io::Write;
-use std::process::{Command, Stdio};
+use std::fs;
 
 #[allow(unused_assignments)]
 pub fn setup() -> Result<Vec<String>, String> {
@@ -27,30 +25,7 @@ pub fn setup() -> Result<Vec<String>, String> {
             };
 
             if let Ok(str) = fs::read_to_string(&track_file_path) {
-                track_file_contents.clone_from(&str);
-
-                // Check if the tracking file is up-to-date
-                // and remove obsolete entries if not
-                for line in str.lines() {
-                    if let Ok(git_status) = Command::new("git")
-                        .args(["-C", line, "status"])
-                        .stdout(Stdio::null())
-                        .stderr(Stdio::null())
-                        .status() {
-                        if !git_status.success() {
-                            track_file_contents = str.replace(line, "");
-                        }
-                    }
-                    else {
-                        return Err(format!("{line}: Could not execute git command"));
-                    }
-                }
-
-                let mut track_file = File::create(&track_file_path).unwrap();
-                match track_file.write_all(track_file_contents.as_bytes()) {
-                    Ok(()) => (),
-                    Err(e) => return Err(format!("{track_file_path}: {e}"))
-                }
+                track_file_contents = str;
             }
         }
         else {
