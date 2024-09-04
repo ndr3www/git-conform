@@ -30,5 +30,7 @@ pub enum Commands {
         #[arg(short, long, group = "directories")]
         #[arg(default_value_t = false)]
         all: bool
-    }
+    },
+    /// Print the list of tracked repositories
+    List
 }

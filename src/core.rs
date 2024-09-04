@@ -52,3 +52,15 @@ pub fn scan_all(home_dir: String, track_file_path: &str, track_file_contents: &s
 
     Ok(())
 }
+
+/// Prints the paths of all tracked git repositories to the standard output
+pub fn list(track_file_contents: &str) {
+    if track_file_contents.is_empty() {
+        println!("{APP_NAME}: No repository is being tracked");
+        return;
+    }
+
+    for line in track_file_contents.lines() {
+        println!("{line}");
+    }
+}
