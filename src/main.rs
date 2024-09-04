@@ -74,10 +74,7 @@ fn main() {
     }
 
     // Handle command-line interactions
-
-    let cli = Cli::parse();
-
-    match cli.get_command() {
+    match Cli::parse().get_command() {
         Commands::Scan { dirs, all } => {
             if *all {
                 if let Err(e) = scan_all(home_dir, track_file_path.as_str(), track_file_contents.as_str()) {
