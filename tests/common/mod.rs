@@ -54,7 +54,7 @@ pub fn setup() -> Result<Vec<String>, String> {
                 let mut track_file = File::create(&track_file_path).unwrap();
                 match track_file.write_all(track_file_contents.as_bytes()) {
                     Ok(()) => (),
-                    Err(e) => return Err(format!("{track_file_contents}: {e}"))
+                    Err(e) => return Err(format!("{track_file_path}: {e}"))
                 }
             }
         }
