@@ -21,7 +21,7 @@ impl Cli {
 /// List of available commands and options
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Search for untracked git repositories
+    /// Search for untracked repositories
     /// and add them for tracking
     Scan {
         /// Directories specified for scanning
