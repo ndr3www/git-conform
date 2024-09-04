@@ -30,7 +30,8 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
             // Check if the path contains .git directory
             if let Some(path) = entry.path().to_str() {
                 if let Some(repo_path) = path.strip_suffix("/.git") {
-                    // Check if the tracking file already contains the git repository path
+                    // Check if the tracking file already
+                    // contains the git repository path
                     if track_file_contents.contains(repo_path) {
                         continue;
                     }
@@ -58,7 +59,8 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
     Ok(())
 }
 
-/// Prints given error message to the standard error with application name and then exits the application with specified error code
+/// Prints given error message to the standard error with application name
+/// and then exits the application with specified error code
 pub fn handle_error(error: &str, code: i32) {
     eprintln!("{APP_NAME}: {error}");
     process::exit(code);

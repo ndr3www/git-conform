@@ -36,7 +36,8 @@ fn main() {
             if let Ok(str) = fs::read_to_string(&track_file_path) {
                 track_file_contents.clone_from(&str);
 
-                // Check if the tracking file is up-to-date and remove obsolete entries if not
+                // Check if the tracking file is up-to-date
+                // and remove obsolete entries if not
                 for line in str.lines() {
                     if let Ok(git_status) = Command::new("git")
                         .args(["-C", line, "status"])
