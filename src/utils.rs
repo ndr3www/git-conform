@@ -14,6 +14,13 @@ pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
 /// Searches recursively in dirs for untracked git repositories and automatically adds them to the tracking file
 #[allow(clippy::redundant_closure_for_method_calls)]
 pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+    // Open/create the tracking file for writing
+    let mut track_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(track_file_path)
+        .map_err(|e| format!("{track_file_path}: {e}"))?;
+
     for dir in dirs {
         for entry in WalkDir::new(dir)
                 .follow_links(true)
@@ -38,13 +45,6 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
                         .map_err(|e| format!("{e}"))?;
 
                     if git_status.success() {
-                        // Open/create the tracking file for writing
-                        let mut track_file = OpenOptions::new()
-                            .create(true)
-                            .append(true)
-                            .open(track_file_path)
-                            .map_err(|e| format!("{track_file_path}: {e}"))?;
-
                         // Add the path of the git repository to the tracking file
                         track_file.write_all(
                             format!("{repo_path}\r\n").as_bytes())
