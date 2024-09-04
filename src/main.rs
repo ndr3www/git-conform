@@ -8,7 +8,6 @@ use crate::cli::{Cli, Commands};
 
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::Path;
 use std::process::{Command, Stdio};
 
 use clap::Parser;
@@ -39,22 +38,17 @@ fn main() {
 
                 // Check if the tracking file is up-to-date and remove obsolete entries if not
                 for line in str.lines() {
-                    if Path::new(format!("{line}/.git").as_str()).exists() {
-                        if let Ok(git_status) = Command::new("git")
-                            .args(["-C", line, "status"])
-                            .stdout(Stdio::null())
-                            .stderr(Stdio::null())
-                            .status() {
-                            if !git_status.success() {
-                                track_file_contents = str.replace(line, "");
-                            }
-                        }
-                        else {
-                            handle_error(format!("{line}: Could not execute git command").as_str(), 1);
+                    if let Ok(git_status) = Command::new("git")
+                        .args(["-C", line, "status"])
+                        .stdout(Stdio::null())
+                        .stderr(Stdio::null())
+                        .status() {
+                        if !git_status.success() {
+                            track_file_contents = str.replace(line, "");
                         }
                     }
                     else {
-                        track_file_contents = str.replace(line, "");
+                        handle_error(format!("{line}: Could not execute git command").as_str(), 1);
                     }
                 }
 
