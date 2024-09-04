@@ -2,7 +2,12 @@ mod core;
 mod utils;
 mod cli;
 
-use crate::core::{scan_dirs, scan_all, list};
+use crate::core::{
+    scan_dirs,
+    scan_all,
+    list,
+    add
+};
 use crate::utils::{APP_NAME, handle_error};
 use crate::cli::{Cli, Commands};
 
@@ -82,6 +87,11 @@ fn main() {
         },
         Commands::List => {
             list(track_file_contents.as_str());
+        },
+        Commands::Add { repos } => {
+            if let Err(e) = add(repos, track_file_path.as_str(), track_file_contents.as_str()) {
+                handle_error(&e, 3);
+            }
         }
     };
 }

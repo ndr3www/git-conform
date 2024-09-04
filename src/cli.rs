@@ -33,5 +33,10 @@ pub enum Commands {
         all: bool
     },
     /// Print the list of tracked repositories
-    List
+    List,
+    /// Add specified repositories for tracking
+    Add {
+        #[arg(required = true)]
+        repos: Vec<String>
+    }
 }

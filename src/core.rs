@@ -5,7 +5,10 @@
 
 use crate::utils::{APP_NAME, search_for_repos};
 
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::path::Path;
+use std::process::{Command, Stdio};
 
 /// Scan specified directories only
 pub fn scan_dirs(dirs: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
@@ -63,4 +66,71 @@ pub fn list(track_file_contents: &str) {
     for line in track_file_contents.lines() {
         println!("{line}");
     }
+}
+
+pub fn add(repos: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+    // Repositories validation
+
+    let mut repos_ok = true;
+
+    for repo in repos {
+        // Check if the path exists
+        if let Ok(p) = Path::new(&repo).try_exists() {
+            if !p {
+                eprintln!("{APP_NAME}: Repository '{repo}' does not exist");
+                repos_ok = false;
+                continue;
+            }
+        }
+        else {
+            eprintln!("{APP_NAME}: Cannot check the existance of repository '{repo}'");
+            repos_ok = false;
+            continue;
+        }
+
+        // Check if the path is a git repository
+        if let Ok(git_status) = Command::new("git")
+            .args(["-C", repo, "status"])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status() {
+            if !git_status.success() {
+                eprintln!("{APP_NAME}: '{repo}' is not a git repository");
+                repos_ok = false;
+                continue;
+            }
+        }
+        else {
+            eprintln!("{APP_NAME}: {repo}: Could not execute git command");
+            repos_ok = false;
+            continue;
+        }
+    }
+
+    if !repos_ok {
+        return Err(String::from("Repositories validation failed"));
+    }
+
+    // Open/create the tracking file for writing
+    let mut track_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(track_file_path)
+        .map_err(|e| format!("{track_file_path}: {e}"))?;
+
+    for repo in repos {
+        // Check if the tracking file already
+        // contains the git repository path
+        if track_file_contents.contains(repo) {
+            println!("{APP_NAME}: '{repo}' is already being tracked");
+            continue;
+        }
+
+        // Add the path of the git repository to the tracking file
+        track_file.write_all(
+            format!("{repo}\n").as_bytes())
+            .map_err(|e| format!("{track_file_path}: {e}"))?;
+    }
+
+    Ok(())
 }
