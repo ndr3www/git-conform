@@ -47,7 +47,7 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
                     if git_status.success() {
                         // Add the path of the git repository to the tracking file
                         track_file.write_all(
-                            format!("{repo_path}\r\n").as_bytes())
+                            format!("{repo_path}\n").as_bytes())
                             .map_err(|e| format!("{track_file_path}: {e}"))?;
                     }
                 }
