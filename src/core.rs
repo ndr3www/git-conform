@@ -10,7 +10,7 @@ use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-/// Scan specified directories only
+/// Scans specified directories only
 pub fn scan_dirs(dirs: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
     // Directories validation
 
@@ -49,7 +49,7 @@ pub fn scan_dirs(dirs: &[String], track_file_path: &str, track_file_contents: &s
     Ok(())
 }
 
-/// Scan all directories in user's /home
+/// Scans all directories in user's /home
 pub fn scan_all(home_dir: String, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
     search_for_repos(&[home_dir], track_file_path, track_file_contents)?;
 
@@ -68,6 +68,7 @@ pub fn list(track_file_contents: &str) {
     }
 }
 
+/// Writes the paths of the specified repos to the tracking file
 pub fn add(repos: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
     // Repositories validation
 
