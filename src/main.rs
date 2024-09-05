@@ -39,7 +39,7 @@ fn main() {
             };
 
             if let Ok(str) = fs::read_to_string(&track_file_path) {
-                track_file_contents.clone_from(&str);
+                let mut str_temp = str.clone();
 
                 // Check if the tracking file is up-to-date
                 // and remove obsolete entries if not
@@ -50,13 +50,17 @@ fn main() {
                         .stderr(Stdio::null())
                         .status() {
                         if !git_status.success() {
-                            track_file_contents = str.replace(line, "");
+                            if let Some(home_path_offset) = line.find(home_path_str) {
+                                str_temp.replace_range(home_path_offset.., "");
+                            }
                         }
                     }
                     else {
                         handle_error(format!("{line}: Could not execute git command").as_str(), 1);
                     }
                 }
+
+                track_file_contents = str_temp;
 
                 let mut track_file = File::create(&track_file_path).unwrap();
                 match track_file.write_all(track_file_contents.as_bytes()) {
