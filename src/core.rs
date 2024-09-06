@@ -166,7 +166,7 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
         }
     }
 
-    // Write final changes to the tracking file
+    // Write the final changes to the tracking file
     OpenOptions::new()
         .write(true)
         .truncate(true)
