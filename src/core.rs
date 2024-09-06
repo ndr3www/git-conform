@@ -122,7 +122,17 @@ pub fn add(repos: &[String], track_file_path: &str, track_file_contents: &str) -
     for repo in repos {
         // Check if the tracking file already
         // contains the git repository path
-        if track_file_contents.contains(repo) {
+
+        let mut repo_exists = false;
+
+        for line in track_file_contents.lines() {
+            if line.trim() == repo.trim() {
+                repo_exists = true;
+                break;
+            }
+        }
+
+        if repo_exists {
             println!("{APP_NAME}: '{repo}' is already being tracked");
             continue;
         }
