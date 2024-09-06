@@ -42,25 +42,20 @@ fn main() {
             };
 
             if let Ok(str) = fs::read_to_string(&track_file_path) {
-                let mut str_temp = str.clone();
-
-                // Check if the tracking file is up-to-date
-                // and remove obsolete entries if not
+                // Update the tracking file, push only the paths
+                // that are still git repositories
                 for line in str.lines() {
                     match path_is_repo(line) {
                         Ok(is_repo) => {
-                            if !is_repo {
-                                if let Some(home_path_offset) = line.find(home_path_str) {
-                                    str_temp.replace_range(home_path_offset.., "");
-                                }
+                            if is_repo {
+                                track_file_contents.push_str(format!("{line}\n").as_str());
                             }
                         },
                         Err(e) => handle_error(format!("{line}: {e}").as_str(), 1)
                     };
                 }
 
-                track_file_contents = str_temp;
-
+                // Write final changes to the tracking file
                 let mut track_file = File::create(&track_file_path).unwrap();
                 match track_file.write_all(track_file_contents.as_bytes()) {
                     Ok(()) => (),
