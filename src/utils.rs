@@ -32,7 +32,17 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
                 if let Some(repo_path) = path.strip_suffix("/.git") {
                     // Check if the tracking file already
                     // contains the git repository path
-                    if track_file_contents.contains(repo_path) {
+
+                    let mut repo_exists = false;
+
+                    for line in track_file_contents.lines() {
+                        if line.trim() == repo_path.trim() {
+                            repo_exists = true;
+                            break;
+                        }
+                    }
+
+                    if repo_exists {
                         continue;
                     }
 
