@@ -93,7 +93,7 @@ fn main() {
             list(track_file_contents.as_str());
         },
         Commands::Add { repos } => {
-            if let Err(e) = add(repos, track_file_path.as_str(), track_file_contents.as_str()) {
+            if let Err(e) = add(repos.to_owned(), track_file_path.as_str(), track_file_contents.as_str()) {
                 handle_error(&e, 3);
             }
         }

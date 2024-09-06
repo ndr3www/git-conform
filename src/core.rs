@@ -69,12 +69,16 @@ pub fn list(track_file_contents: &str) {
 }
 
 /// Writes the paths of the specified repos to the tracking file
-pub fn add(repos: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+pub fn add(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+    // Remove duplicates
+    repos.sort_unstable();
+    repos.dedup();
+
     // Repositories validation
 
     let mut repos_ok = true;
 
-    for repo in repos {
+    for repo in &repos {
         // Check if the path exists
         if let Ok(p) = Path::new(&repo).try_exists() {
             if !p {

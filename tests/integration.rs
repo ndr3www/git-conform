@@ -48,7 +48,7 @@ fn case_add() {
     let project_root = project_root_binding.to_str().unwrap();
 
     // The function executes without errors
-    assert_eq!(add(&[project_root.to_string()], track_file_path.as_str(), ""), Ok(()));
+    assert_eq!(add(vec![project_root.to_string()], track_file_path.as_str(), ""), Ok(()));
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(track_file_path).unwrap();
