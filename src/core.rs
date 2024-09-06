@@ -15,12 +15,16 @@ use std::io::Write;
 use std::path::Path;
 
 /// Scans specified directories only
-pub fn scan_dirs(dirs: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+    // Remove duplicates
+    dirs.sort_unstable();
+    dirs.dedup();
+
     // Directories validation
 
     let mut dirs_ok = true;
 
-    for dir in dirs {
+    for dir in &dirs {
         let path = Path::new(&dir);
 
         // Check if the path exists
@@ -48,7 +52,7 @@ pub fn scan_dirs(dirs: &[String], track_file_path: &str, track_file_contents: &s
         return Err(String::from("Directories validation failed"));
     }
 
-    search_for_repos(dirs, track_file_path, track_file_contents)?;
+    search_for_repos(dirs.as_slice(), track_file_path, track_file_contents)?;
 
     Ok(())
 }

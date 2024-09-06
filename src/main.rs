@@ -84,7 +84,7 @@ fn main() {
                     handle_error(&e, 2);
                 }
             }
-            else if let Err(e) = scan_dirs(dirs, track_file_path.as_str(), track_file_contents.as_str()) {
+            else if let Err(e) = scan_dirs(dirs.to_owned(), track_file_path.as_str(), track_file_contents.as_str()) {
                 handle_error(&e, 2);
             }
         },
