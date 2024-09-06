@@ -10,7 +10,7 @@ use crate::utils::{
     path_is_repo
 };
 
-use std::fs::OpenOptions;
+use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
 
@@ -138,6 +138,49 @@ pub fn add(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &
             format!("{repo}\n").as_bytes())
             .map_err(|e| format!("{track_file_path}: {e}"))?;
     }
+
+    Ok(())
+}
+
+/// Removes only specified repositories from the tracking file
+pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+    // Remove duplicates
+    repos.sort_unstable();
+    repos.dedup();
+
+    let mut new_contents = String::new();
+
+    for repo in repos {
+        // Check if the tracking file
+        // contains the git repository
+        if !repo_is_tracked(repo.as_str(), track_file_contents) {
+            println!("{APP_NAME}: '{repo}' is not being tracked");
+            continue;
+        }
+
+        // Push only repositories that weren't specified
+        for line in track_file_contents.lines() {
+            if line.trim() != repo.trim() {
+                new_contents.push_str(format!("{line}\n").as_str());
+            }
+        }
+    }
+
+    // Write final changes to the tracking file
+    OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(track_file_path)
+        .map_err(|e| format!("{track_file_path}: {e}"))?
+        .write_all(new_contents.as_bytes())
+        .map_err(|e| format!("{track_file_path}: {e}"))?;
+
+    Ok(())
+}
+
+/// Removes the tracking file
+pub fn remove_all(track_file_path: &str) -> Result<(), String> {
+    fs::remove_file(track_file_path).map_err(|e| format!("{track_file_path}: {e}"))?;
 
     Ok(())
 }

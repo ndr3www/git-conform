@@ -38,5 +38,14 @@ pub enum Commands {
     Add {
         #[arg(required = true)]
         repos: Vec<String>
+    },
+    /// Stop tracking specified repositories
+    Rm {
+        #[arg(required = true, group = "repositories")]
+        repos: Vec<String>,
+        /// Stop tracking all repositories
+        #[arg(short, long, group = "repositories")]
+        #[arg(default_value_t = false)]
+        all: bool
     }
 }

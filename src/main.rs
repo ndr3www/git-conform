@@ -6,7 +6,9 @@ use crate::core::{
     scan_dirs,
     scan_all,
     list,
-    add
+    add,
+    remove_repos,
+    remove_all
 };
 use crate::utils::{
     APP_NAME,
@@ -89,6 +91,16 @@ fn main() {
         Commands::Add { repos } => {
             if let Err(e) = add(repos.to_owned(), track_file_path.as_str(), track_file_contents.as_str()) {
                 handle_error(&e, 3);
+            }
+        },
+        Commands::Rm { repos, all } => {
+            if *all {
+                if let Err(e) = remove_all(track_file_path.as_str()) {
+                    handle_error(&e, 4);
+                }
+            }
+            else if let Err(e) = remove_repos(repos.to_owned(), track_file_path.as_str(), track_file_contents.as_str()) {
+                handle_error(&e, 4);
             }
         }
     };
