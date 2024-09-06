@@ -58,11 +58,15 @@ fn main() {
                 }
 
                 // Write final the changes to the tracking file
-                let mut track_file = File::create(&track_file_path).unwrap();
-                match track_file.write_all(track_file_contents.as_bytes()) {
-                    Ok(()) => (),
+                match File::create(&track_file_path) {
+                    Ok(mut f) => {
+                        match f.write_all(track_file_contents.as_bytes()) {
+                            Ok(()) => (),
+                            Err(e) => handle_error(format!("{track_file_path}: {e}").as_str(), 1)
+                        }
+                    },
                     Err(e) => handle_error(format!("{track_file_path}: {e}").as_str(), 1)
-                }
+                };
             }
         }
         else {
