@@ -3,7 +3,11 @@
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::missing_panics_doc)]
 
-use crate::utils::{APP_NAME, search_for_repos};
+use crate::utils::{
+    APP_NAME,
+    search_for_repos,
+    repo_is_tracked
+};
 
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -126,17 +130,7 @@ pub fn add(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &
     for repo in repos {
         // Check if the tracking file already
         // contains the git repository path
-
-        let mut repo_exists = false;
-
-        for line in track_file_contents.lines() {
-            if line.trim() == repo.trim() {
-                repo_exists = true;
-                break;
-            }
-        }
-
-        if repo_exists {
+        if repo_is_tracked(repo.as_str(), track_file_contents) {
             println!("{APP_NAME}: '{repo}' is already being tracked");
             continue;
         }

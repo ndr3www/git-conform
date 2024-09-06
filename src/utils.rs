@@ -32,17 +32,7 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
                 if let Some(repo_path) = path.strip_suffix("/.git") {
                     // Check if the tracking file already
                     // contains the git repository path
-
-                    let mut repo_exists = false;
-
-                    for line in track_file_contents.lines() {
-                        if line.trim() == repo_path.trim() {
-                            repo_exists = true;
-                            break;
-                        }
-                    }
-
-                    if repo_exists {
+                    if repo_is_tracked(repo_path, track_file_contents) {
                         continue;
                     }
 
@@ -67,6 +57,21 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
     }
 
     Ok(())
+}
+
+/// Checks if a given repository has an entry in the tracking file
+#[allow(clippy::must_use_candidate)]
+pub fn repo_is_tracked(repo: &str, track_file_contents: &str) -> bool {
+    let mut repo_exists = false;
+
+    for line in track_file_contents.lines() {
+        if line.trim() == repo.trim() {
+            repo_exists = true;
+            break;
+        }
+    }
+
+    repo_exists
 }
 
 /// Prints given error message to the standard error with application name
