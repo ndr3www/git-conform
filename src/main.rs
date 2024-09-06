@@ -8,12 +8,15 @@ use crate::core::{
     list,
     add
 };
-use crate::utils::{APP_NAME, handle_error};
+use crate::utils::{
+    APP_NAME,
+    handle_error,
+    path_is_repo
+};
 use crate::cli::{Cli, Commands};
 
 use std::fs::{self, File};
 use std::io::Write;
-use std::process::{Command, Stdio};
 
 use clap::Parser;
 
@@ -44,20 +47,16 @@ fn main() {
                 // Check if the tracking file is up-to-date
                 // and remove obsolete entries if not
                 for line in str.lines() {
-                    if let Ok(git_status) = Command::new("git")
-                        .args(["-C", line, "status"])
-                        .stdout(Stdio::null())
-                        .stderr(Stdio::null())
-                        .status() {
-                        if !git_status.success() {
-                            if let Some(home_path_offset) = line.find(home_path_str) {
-                                str_temp.replace_range(home_path_offset.., "");
+                    match path_is_repo(line) {
+                        Ok(is_repo) => {
+                            if !is_repo {
+                                if let Some(home_path_offset) = line.find(home_path_str) {
+                                    str_temp.replace_range(home_path_offset.., "");
+                                }
                             }
-                        }
-                    }
-                    else {
-                        handle_error(format!("{line}: Could not execute git command").as_str(), 1);
-                    }
+                        },
+                        Err(e) => handle_error(format!("{line}: {e}").as_str(), 1)
+                    };
                 }
 
                 track_file_contents = str_temp;

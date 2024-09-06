@@ -37,20 +37,17 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
                     }
 
                     // Check if the path is in fact a git repository
-
-                    let git_status = Command::new("git")
-                        .args(["-C", repo_path, "status"])
-                        .stdout(Stdio::null())
-                        .stderr(Stdio::null())
-                        .status()
-                        .map_err(|e| format!("{e}"))?;
-
-                    if git_status.success() {
-                        // Add the path of the git repository to the tracking file
-                        track_file.write_all(
-                            format!("{repo_path}\n").as_bytes())
-                            .map_err(|e| format!("{track_file_path}: {e}"))?;
-                    }
+                    match path_is_repo(repo_path) {
+                        Ok(is_repo) => {
+                            if is_repo {
+                                // Add the path of the git repository to the tracking file
+                                track_file.write_all(
+                                    format!("{repo_path}\n").as_bytes())
+                                    .map_err(|e| format!("{track_file_path}: {e}"))?;
+                            }
+                        },
+                        Err(e) => return Err(e)
+                    };
                 }
             }
         }
@@ -59,7 +56,7 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
     Ok(())
 }
 
-/// Checks if a given repository has an entry in the tracking file
+/// Checks if the given repository has an entry in the tracking file
 #[allow(clippy::must_use_candidate)]
 pub fn repo_is_tracked(repo: &str, track_file_contents: &str) -> bool {
     let mut repo_exists = false;
@@ -72,6 +69,18 @@ pub fn repo_is_tracked(repo: &str, track_file_contents: &str) -> bool {
     }
 
     repo_exists
+}
+
+/// Checks if the given path is a git repository
+pub fn path_is_repo(path: &str) -> Result<bool, String> {
+    let git_status = Command::new("git")
+        .args(["-C", path, "status"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map_err(|e| format!("{e}"))?;
+
+    Ok(git_status.success())
 }
 
 /// Prints given error message to the standard error with application name

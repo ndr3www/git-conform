@@ -6,13 +6,13 @@
 use crate::utils::{
     APP_NAME,
     search_for_repos,
-    repo_is_tracked
+    repo_is_tracked,
+    path_is_repo
 };
 
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
-use std::process::{Command, Stdio};
 
 /// Scans specified directories only
 pub fn scan_dirs(dirs: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
@@ -98,22 +98,16 @@ pub fn add(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &
         }
 
         // Check if the path is a git repository
-        if let Ok(git_status) = Command::new("git")
-            .args(["-C", repo, "status"])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status() {
-            if !git_status.success() {
-                eprintln!("{APP_NAME}: '{repo}' is not a git repository");
-                repos_ok = false;
-                continue;
-            }
-        }
-        else {
-            eprintln!("{APP_NAME}: {repo}: Could not execute git command");
-            repos_ok = false;
-            continue;
-        }
+        match path_is_repo(repo) {
+            Ok(is_repo) => {
+                if !is_repo {
+                    eprintln!("{APP_NAME}: '{repo}' is not a git repository");
+                    repos_ok = false;
+                    continue;
+                }
+            },
+            Err(e) => return Err(e)
+        };
     }
 
     if !repos_ok {
