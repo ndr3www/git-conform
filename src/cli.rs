@@ -22,7 +22,7 @@ impl Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Search for untracked repositories
-    /// and add them for tracking
+    /// and start tracking them
     Scan {
         /// Directories specified for scanning
         #[arg(required = true, group = "directories")]
@@ -34,7 +34,7 @@ pub enum Commands {
     },
     /// Print the list of tracked repositories
     List,
-    /// Add specified repositories for tracking
+    /// Start tracking specified repositories
     Add {
         #[arg(required = true)]
         repos: Vec<String>
