@@ -71,9 +71,7 @@ pub fn list(track_file_contents: &str) {
         return;
     }
 
-    for line in track_file_contents.lines() {
-        println!("{line}");
-    }
+    print!("{track_file_contents}");
 }
 
 /// Writes the paths of the specified repos to the tracking file
