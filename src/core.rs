@@ -177,7 +177,12 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
 }
 
 /// Removes the tracking file
-pub fn remove_all(track_file_path: &str) -> Result<(), String> {
+pub fn remove_all(track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+    if track_file_contents.is_empty() {
+        println!("{APP_NAME}: No repository is being tracked");
+        return Ok(());
+    }
+
     fs::remove_file(track_file_path).map_err(|e| format!("{track_file_path}: {e}"))?;
 
     Ok(())

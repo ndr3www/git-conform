@@ -99,7 +99,7 @@ fn main() {
         },
         Commands::Rm { repos, all } => {
             if *all {
-                if let Err(e) = remove_all(track_file_path.as_str()) {
+                if let Err(e) = remove_all(track_file_path.as_str(), track_file_contents.as_str()) {
                     handle_error(&e, 4);
                 }
             }
