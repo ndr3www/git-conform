@@ -90,21 +90,23 @@ fn main() {
             }
         },
         Commands::List => {
-            list(track_file_contents.as_str());
+            if let Err(e) = list(track_file_contents.as_str()) {
+                handle_error(&e, 3);
+            }
         },
         Commands::Add { repos } => {
             if let Err(e) = add(repos.to_owned(), track_file_path.as_str(), track_file_contents.as_str()) {
-                handle_error(&e, 3);
+                handle_error(&e, 4);
             }
         },
         Commands::Rm { repos, all } => {
             if *all {
                 if let Err(e) = remove_all(track_file_path.as_str(), track_file_contents.as_str()) {
-                    handle_error(&e, 4);
+                    handle_error(&e, 5);
                 }
             }
             else if let Err(e) = remove_repos(repos.to_owned(), track_file_path.as_str(), track_file_contents.as_str()) {
-                handle_error(&e, 4);
+                handle_error(&e, 5);
             }
         }
     };

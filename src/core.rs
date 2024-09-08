@@ -65,13 +65,14 @@ pub fn scan_all(home_dir: String, track_file_path: &str, track_file_contents: &s
 }
 
 /// Prints the paths of all tracked git repositories to the standard output
-pub fn list(track_file_contents: &str) {
+pub fn list(track_file_contents: &str) -> Result<(), String> {
     if track_file_contents.is_empty() {
-        println!("{APP_NAME}: No repository is being tracked");
-        return;
+        return Err(String::from("No repository is being tracked"));
     }
 
     print!("{track_file_contents}");
+
+    Ok(())
 }
 
 /// Writes the paths of the specified repos to the tracking file
@@ -179,8 +180,7 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
 /// Removes the tracking file
 pub fn remove_all(track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
     if track_file_contents.is_empty() {
-        println!("{APP_NAME}: No repository is being tracked");
-        return Ok(());
+        return Err(String::from("No repository is being tracked"));
     }
 
     fs::remove_file(track_file_path).map_err(|e| format!("{track_file_path}: {e}"))?;
