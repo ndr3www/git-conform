@@ -46,7 +46,7 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
                                     .map_err(|e| format!("{track_file_path}: {e}"))?;
                             }
                         },
-                        Err(e) => return Err(e)
+                        Err(e) => return Err(format!("{repo_path}: {e}"))
                     };
                 }
             }
