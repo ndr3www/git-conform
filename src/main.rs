@@ -53,7 +53,7 @@ fn main() {
                                 track_file_contents.push_str(format!("{line}\n").as_str());
                             }
                         },
-                        Err(e) => handle_error(format!("{line}: {e}").as_str(), 1)
+                        Err(e) => handle_error(e.as_str(), 1)
                     };
                 }
 

@@ -69,7 +69,7 @@ fn search_core(entry: &DirEntry, mut track_file: &File, track_file_path: &str, t
                             .map_err(|e| format!("{track_file_path}: {e}"))?;
                     }
                 },
-                Err(e) => return Err(format!("{repo_path}: {e}"))
+                Err(e) => return Err(e)
             };
         }
     }
@@ -107,7 +107,7 @@ pub fn path_is_repo(path: &str) -> Result<bool, String> {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
-        .map_err(|e| format!("{e}"))?;
+        .map_err(|e| format!("{path}: {e}"))?;
 
     Ok(git_status.success())
 }
