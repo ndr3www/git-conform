@@ -7,13 +7,13 @@ use std::process::{self, Command, Stdio};
 use std::fs::OpenOptions;
 use std::io::Write;
 
-use walkdir::WalkDir;
+use walkdir::{WalkDir, DirEntry};
 
 pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
 
 /// Searches recursively in dirs for untracked git repositories and automatically adds them to the tracking file
 #[allow(clippy::redundant_closure_for_method_calls)]
-pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
     // Open/create the tracking file for writing
     let mut track_file = OpenOptions::new()
         .create(true)
@@ -21,39 +21,83 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
         .open(track_file_path)
         .map_err(|e| format!("{track_file_path}: {e}"))?;
 
-    for dir in dirs {
-        for entry in WalkDir::new(dir)
+    if scan_hidden {
+        for dir in dirs {
+            for entry in WalkDir::new(dir)
                 .follow_links(true)
                 .same_file_system(true)
                 .into_iter()
                 .filter_map(|n| n.ok()) {
-            // Check if the path contains .git directory
-            if let Some(path) = entry.path().to_str() {
-                if let Some(repo_path) = path.strip_suffix("/.git") {
-                    // Check if the tracking file already
-                    // contains the git repository path
-                    if repo_is_tracked(repo_path, track_file_contents) {
-                        continue;
-                    }
+                // Check if the path contains .git directory
+                if let Some(path) = entry.path().to_str() {
+                    if let Some(repo_path) = path.strip_suffix("/.git") {
+                        // Check if the tracking file already
+                        // contains the git repository path
+                        if repo_is_tracked(repo_path, track_file_contents) {
+                            continue;
+                        }
 
-                    // Check if the path is in fact a git repository
-                    match path_is_repo(repo_path) {
-                        Ok(is_repo) => {
-                            if is_repo {
-                                // Add the path of the git repository to the tracking file
-                                track_file.write_all(
-                                    format!("{repo_path}\n").as_bytes())
-                                    .map_err(|e| format!("{track_file_path}: {e}"))?;
-                            }
-                        },
-                        Err(e) => return Err(format!("{repo_path}: {e}"))
-                    };
+                        // Check if the path is in fact a git repository
+                        match path_is_repo(repo_path) {
+                            Ok(is_repo) => {
+                                if is_repo {
+                                    // Add the path of the git repository to the tracking file
+                                    track_file.write_all(
+                                        format!("{repo_path}\n").as_bytes())
+                                        .map_err(|e| format!("{track_file_path}: {e}"))?;
+                                }
+                            },
+                            Err(e) => return Err(format!("{repo_path}: {e}"))
+                        };
+                    }
+                }
+            }
+        }
+    }
+    else {
+        for dir in dirs {
+            for entry in WalkDir::new(dir)
+                .follow_links(true)
+                .same_file_system(true)
+                .into_iter()
+                .filter_entry(|n| !entry_is_hidden(n))
+                .filter_map(|n| n.ok()) {
+                // Check if the path contains .git directory
+                if let Some(path) = entry.path().to_str() {
+                    if let Some(repo_path) = path.strip_suffix("/.git") {
+                        // Check if the tracking file already
+                        // contains the git repository path
+                        if repo_is_tracked(repo_path, track_file_contents) {
+                            continue;
+                        }
+
+                        // Check if the path is in fact a git repository
+                        match path_is_repo(repo_path) {
+                            Ok(is_repo) => {
+                                if is_repo {
+                                    // Add the path of the git repository to the tracking file
+                                    track_file.write_all(
+                                        format!("{repo_path}\n").as_bytes())
+                                        .map_err(|e| format!("{track_file_path}: {e}"))?;
+                                }
+                            },
+                            Err(e) => return Err(format!("{repo_path}: {e}"))
+                        };
+                    }
                 }
             }
         }
     }
 
     Ok(())
+}
+
+// Checks if the given entry is a hidden directory
+// excluding .git directories
+fn entry_is_hidden(entry: &DirEntry) -> bool {
+    entry.file_name()
+        .to_str()
+        .is_some_and(|s| s.starts_with('.') && s != ".git")
 }
 
 /// Checks if the given repository has an entry in the tracking file

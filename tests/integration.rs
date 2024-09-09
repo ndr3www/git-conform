@@ -25,7 +25,7 @@ fn case_scan() {
     let project_root = project_root_binding.to_str().unwrap();
 
     // The function executes without errors
-    assert_eq!(search_for_repos(&[project_root.to_string()], track_file_path.as_str(), ""), Ok(()));
+    assert_eq!(search_for_repos(&[project_root.to_string()], track_file_path.as_str(), "", true), Ok(()));
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(track_file_path).unwrap();

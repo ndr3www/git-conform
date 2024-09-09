@@ -79,13 +79,13 @@ fn main() {
 
     // Handle command-line interactions
     match Cli::parse().get_command() {
-        Commands::Scan { dirs, all } => {
+        Commands::Scan { dirs, all, no_hidden} => {
             if *all {
-                if let Err(e) = scan_all(home_dir, track_file_path.as_str(), track_file_contents.as_str()) {
+                if let Err(e) = scan_all(home_dir, track_file_path.as_str(), track_file_contents.as_str(), !no_hidden) {
                     handle_error(&e, 2);
                 }
             }
-            else if let Err(e) = scan_dirs(dirs.to_owned(), track_file_path.as_str(), track_file_contents.as_str()) {
+            else if let Err(e) = scan_dirs(dirs.to_owned(), track_file_path.as_str(), track_file_contents.as_str(), !no_hidden) {
                 handle_error(&e, 2);
             }
         },

@@ -15,7 +15,7 @@ use std::io::Write;
 use std::path::Path;
 
 /// Scans specified directories only
-pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
     // Remove duplicates
     dirs.sort_unstable();
     dirs.dedup();
@@ -52,14 +52,14 @@ pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_conten
         return Err(String::from("Directories validation failed"));
     }
 
-    search_for_repos(dirs.as_slice(), track_file_path, track_file_contents)?;
+    search_for_repos(dirs.as_slice(), track_file_path, track_file_contents, scan_hidden)?;
 
     Ok(())
 }
 
 /// Scans all directories in user's /home
-pub fn scan_all(home_dir: String, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
-    search_for_repos(&[home_dir], track_file_path, track_file_contents)?;
+pub fn scan_all(home_dir: String, track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
+    search_for_repos(&[home_dir], track_file_path, track_file_contents, scan_hidden)?;
 
     Ok(())
 }

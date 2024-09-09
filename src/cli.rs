@@ -30,7 +30,11 @@ pub enum Commands {
         /// Scan all directories in your /home
         #[arg(short, long, group = "directories")]
         #[arg(default_value_t = false)]
-        all: bool
+        all: bool,
+        /// Don't scan hidden directories
+        #[arg(long)]
+        #[arg(default_value_t = false)]
+        no_hidden: bool
     },
     /// Print the list of tracked repositories
     List,
