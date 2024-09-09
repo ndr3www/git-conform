@@ -4,7 +4,7 @@
 #![allow(clippy::missing_panics_doc)]
 
 use std::process::{self, Command, Stdio};
-use std::fs::OpenOptions;
+use std::fs::{OpenOptions, File};
 use std::io::Write;
 
 use walkdir::{WalkDir, DirEntry};
@@ -15,7 +15,7 @@ pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
 #[allow(clippy::redundant_closure_for_method_calls)]
 pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
     // Open/create the tracking file for writing
-    let mut track_file = OpenOptions::new()
+    let track_file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(track_file_path)
@@ -28,29 +28,7 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
                 .same_file_system(true)
                 .into_iter()
                 .filter_map(|n| n.ok()) {
-                // Check if the path contains .git directory
-                if let Some(path) = entry.path().to_str() {
-                    if let Some(repo_path) = path.strip_suffix("/.git") {
-                        // Check if the tracking file already
-                        // contains the git repository path
-                        if repo_is_tracked(repo_path, track_file_contents) {
-                            continue;
-                        }
-
-                        // Check if the path is in fact a git repository
-                        match path_is_repo(repo_path) {
-                            Ok(is_repo) => {
-                                if is_repo {
-                                    // Add the path of the git repository to the tracking file
-                                    track_file.write_all(
-                                        format!("{repo_path}\n").as_bytes())
-                                        .map_err(|e| format!("{track_file_path}: {e}"))?;
-                                }
-                            },
-                            Err(e) => return Err(format!("{repo_path}: {e}"))
-                        };
-                    }
-                }
+                    search_core(&entry, &track_file, track_file_path, track_file_contents)?;
             }
         }
     }
@@ -62,30 +40,37 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
                 .into_iter()
                 .filter_entry(|n| !entry_is_hidden(n))
                 .filter_map(|n| n.ok()) {
-                // Check if the path contains .git directory
-                if let Some(path) = entry.path().to_str() {
-                    if let Some(repo_path) = path.strip_suffix("/.git") {
-                        // Check if the tracking file already
-                        // contains the git repository path
-                        if repo_is_tracked(repo_path, track_file_contents) {
-                            continue;
-                        }
-
-                        // Check if the path is in fact a git repository
-                        match path_is_repo(repo_path) {
-                            Ok(is_repo) => {
-                                if is_repo {
-                                    // Add the path of the git repository to the tracking file
-                                    track_file.write_all(
-                                        format!("{repo_path}\n").as_bytes())
-                                        .map_err(|e| format!("{track_file_path}: {e}"))?;
-                                }
-                            },
-                            Err(e) => return Err(format!("{repo_path}: {e}"))
-                        };
-                    }
-                }
+                    search_core(&entry, &track_file, track_file_path, track_file_contents)?;
             }
+        }
+    }
+
+    Ok(())
+}
+
+// Core functionality of the search_for_repos function
+fn search_core(entry: &DirEntry, mut track_file: &File, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+    // Check if the path contains .git directory
+    if let Some(path) = entry.path().to_str() {
+        if let Some(repo_path) = path.strip_suffix("/.git") {
+            // Check if the tracking file already
+            // contains the git repository path
+            if repo_is_tracked(repo_path, track_file_contents) {
+                return Ok(())
+            }
+
+            // Check if the path is in fact a git repository
+            match path_is_repo(repo_path) {
+                Ok(is_repo) => {
+                    if is_repo {
+                        // Add the path of the git repository to the tracking file
+                        track_file.write_all(
+                            format!("{repo_path}\n").as_bytes())
+                            .map_err(|e| format!("{track_file_path}: {e}"))?;
+                    }
+                },
+                Err(e) => return Err(format!("{repo_path}: {e}"))
+            };
         }
     }
 
