@@ -149,6 +149,12 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
 
     let mut new_contents = String::new();
 
+    // Open/create the tracking file for writing
+    let mut track_file = OpenOptions::new()
+        .write(true)
+        .open(track_file_path)
+        .map_err(|e| format!("{track_file_path}: {e}"))?;
+
     for repo in repos {
         // Check if the tracking file
         // contains the git repository
@@ -163,16 +169,11 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
                 new_contents.push_str(format!("{line}\n").as_str());
             }
         }
-    }
 
-    // Write the final changes to the tracking file
-    OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(track_file_path)
-        .map_err(|e| format!("{track_file_path}: {e}"))?
-        .write_all(new_contents.as_bytes())
-        .map_err(|e| format!("{track_file_path}: {e}"))?;
+        // Write changes to the tracking file
+        track_file.write_all(new_contents.as_bytes())
+            .map_err(|e| format!("{track_file_path}: {e}"))?;
+    }
 
     Ok(())
 }
