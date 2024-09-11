@@ -143,6 +143,10 @@ pub fn add(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &
 
 /// Removes only specified repositories from the tracking file
 pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+    if track_file_contents.is_empty() {
+        return Err(String::from("No repository is being tracked"));
+    }
+
     // Remove duplicates
     repos.sort_unstable();
     repos.dedup();
