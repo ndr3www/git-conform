@@ -151,7 +151,7 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
     repos.sort_unstable();
     repos.dedup();
 
-    let mut new_contents = String::new();
+    let mut new_contents = String::from(" ");
 
     // Open/create the tracking file for writing
     let mut track_file = OpenOptions::new()
