@@ -62,6 +62,15 @@ fn case_remove_repos_only_one() {
 }
 
 #[test]
+fn case_remove_repos_empty_tracking_file() {
+    let essentials = common::setup().unwrap();
+    let track_file_path = &essentials[1];
+
+    // The function executes without errors
+    assert_eq!(remove_repos(vec!["repo2".to_string()], track_file_path, ""), Err(String::from("No repository is being tracked")));
+}
+
+#[test]
 #[serial]
 fn case_remove_all() {
     let essentials = common::setup().unwrap();
@@ -79,4 +88,13 @@ fn case_remove_all() {
 
     // The tracking file doesn't exist
     assert!(!Path::new(track_file_path).try_exists().unwrap());
+}
+
+#[test]
+fn case_remove_all_empty_tracking_file() {
+    let essentials = common::setup().unwrap();
+    let track_file_path = &essentials[1];
+
+    // The function executes without errors
+    assert_eq!(remove_all(track_file_path, ""), Err(String::from("No repository is being tracked")));
 }
