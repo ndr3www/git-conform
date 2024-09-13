@@ -88,16 +88,11 @@ fn entry_is_hidden(entry: &DirEntry) -> bool {
 /// Checks if the given repository has an entry in the tracking file
 #[allow(clippy::must_use_candidate)]
 pub fn repo_is_tracked(repo: &str, track_file_contents: &str) -> bool {
-    let mut repo_exists = false;
+    let track_file_lines: Vec<&str> = track_file_contents
+                                        .split('\n')
+                                        .collect();
 
-    for line in track_file_contents.lines() {
-        if line.trim() == repo.trim() {
-            repo_exists = true;
-            break;
-        }
-    }
-
-    repo_exists
+    track_file_lines.contains(&repo)
 }
 
 /// Checks if the given path is a git repository
