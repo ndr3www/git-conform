@@ -151,11 +151,14 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
     repos.sort_unstable();
     repos.dedup();
 
-    let mut new_contents = String::from(" ");
+    let mut track_file_lines: Vec<&str> = track_file_contents.split('\n').collect();
+    track_file_lines.pop();  // The last element of vector is an empty string,
+                             // so we need to get rid of it
 
     // Open/create the tracking file for writing
     let mut track_file = OpenOptions::new()
         .write(true)
+        .truncate(true)
         .open(track_file_path)
         .map_err(|e| format!("{track_file_path}: {e}"))?;
 
@@ -167,17 +170,20 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
             continue;
         }
 
-        // Push only repositories that weren't specified
-        for line in track_file_contents.lines() {
-            if line.trim() != repo.trim() {
-                new_contents.push_str(format!("{line}\n").as_str());
+        // Remove specified repositories from the vector
+        if let Some(last) = track_file_lines.last() {
+            if repo.trim() == last.trim() {
+                track_file_lines.pop();
+            }
+            else {
+                track_file_lines.retain(|&x| x.trim() != repo.trim());
             }
         }
-
-        // Write changes to the tracking file
-        track_file.write_all(new_contents.as_bytes())
-            .map_err(|e| format!("{track_file_path}: {e}"))?;
     }
+
+    // Write the final changes to the tracking file
+    track_file.write_all(track_file_lines.join("\n").as_bytes())
+        .map_err(|e| format!("{track_file_path}: {e}"))?;
 
     Ok(())
 }

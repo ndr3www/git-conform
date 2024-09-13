@@ -10,7 +10,7 @@ use serial_test::serial;
 
 #[test]
 #[serial]
-fn case_remove_repos() {
+fn case_remove_repos_all() {
     let essentials = common::setup().unwrap();
     let track_file_path = &essentials[1];
 
@@ -34,6 +34,31 @@ fn case_remove_repos() {
 
     // The tracking file is empty
     assert!(track_file_up.is_empty());
+}
+
+#[test]
+#[serial]
+fn case_remove_repos_only_one() {
+    let essentials = common::setup().unwrap();
+    let track_file_path = &essentials[1];
+
+    #[allow(clippy::items_after_statements)]
+    const TRACK_FILE_CONTENTS: &str = "repo1\nrepo2\nrepo3";
+
+    let repos: Vec<&str> = TRACK_FILE_CONTENTS.split('\n').collect();
+
+    File::create(track_file_path).unwrap()
+        .write_all(TRACK_FILE_CONTENTS.as_bytes())
+        .unwrap();
+
+    // The function executes without errors
+    assert_eq!(remove_repos(vec![repos[1].to_string()], track_file_path, TRACK_FILE_CONTENTS), Ok(()));
+
+    // Read the updated tracking file
+    let track_file_up = fs::read_to_string(track_file_path).unwrap();
+
+    // The tracking file doesn't contain repo2
+    assert!(!track_file_up.contains(repos[1]));
 }
 
 #[test]
