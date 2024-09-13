@@ -100,6 +100,36 @@ fn case_scan_dirs_no_hidden() {
 
 #[test]
 #[serial]
+fn case_scan_dirs_non_existent() {
+    let essentials = common::setup().unwrap();
+    let track_file_path = &essentials[1];
+
+    // The function throws an error
+    let dirs = vec![
+        format!("quegq4tq4q"),
+        format!("lvdslns"),
+        format!("fjioadbaob")
+    ];
+    assert_eq!(scan_dirs(dirs, track_file_path, "", true), Err(String::from("Directories validation failed")));
+}
+
+#[test]
+#[serial]
+fn case_scan_dirs_files() {
+    let essentials = common::setup().unwrap();
+    let track_file_path = &essentials[1];
+    let tests_dir = &essentials[2];
+    
+    // The function throws an error
+    let mut dirs: Vec<String> = Vec::new();
+    for n in 1..=3 {
+        dirs.push(format!("{tests_dir}/file{n}"));
+    }
+    assert_eq!(scan_dirs(dirs, track_file_path, "", true), Err(String::from("Directories validation failed")));
+}
+
+#[test]
+#[serial]
 fn case_scan_all() {
     let essentials = common::setup().unwrap();
     let home_dir = &essentials[0];
@@ -144,32 +174,3 @@ fn case_scan_all() {
     }
 }
 
-#[test]
-#[serial]
-fn case_scan_dirs_non_existent() {
-    let essentials = common::setup().unwrap();
-    let track_file_path = &essentials[1];
-
-    // The function throws an error
-    let dirs = vec![
-        format!("quegq4tq4q"),
-        format!("lvdslns"),
-        format!("fjioadbaob")
-    ];
-    assert_eq!(scan_dirs(dirs, track_file_path, "", true), Err(String::from("Directories validation failed")));
-}
-
-#[test]
-#[serial]
-fn case_scan_dirs_files() {
-    let essentials = common::setup().unwrap();
-    let track_file_path = &essentials[1];
-    let tests_dir = &essentials[2];
-    
-    // The function throws an error
-    let mut dirs: Vec<String> = Vec::new();
-    for n in 1..=3 {
-        dirs.push(format!("{tests_dir}/file{n}"));
-    }
-    assert_eq!(scan_dirs(dirs, track_file_path, "", true), Err(String::from("Directories validation failed")));
-}
