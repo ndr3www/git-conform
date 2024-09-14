@@ -62,6 +62,35 @@ fn case_remove_repos_only_one() {
 }
 
 #[test]
+#[serial]
+fn case_remove_repos_non_existent() {
+    let essentials = common::setup().unwrap();
+    let track_file_path = &essentials[1];
+
+    #[allow(clippy::items_after_statements)]
+    const TRACK_FILE_CONTENTS: &str = "repo1\nrepo2\nrepo3";
+
+    let mut repos: Vec<String> = Vec::new();
+    for line in TRACK_FILE_CONTENTS.lines() {
+        repos.push(line.to_string());
+        repos.push("fownfnf".to_string());
+    }
+
+    File::create(track_file_path).unwrap()
+        .write_all(TRACK_FILE_CONTENTS.as_bytes())
+        .unwrap();
+
+    // The function executes without errors
+    assert_eq!(remove_repos(repos, track_file_path, TRACK_FILE_CONTENTS), Ok(()));
+
+    // Read the updated tracking file
+    let track_file_up = fs::read_to_string(track_file_path).unwrap();
+
+    // The tracking file is empty
+    assert!(track_file_up.is_empty());
+}
+
+#[test]
 fn case_remove_repos_empty_tracking_file() {
     let essentials = common::setup().unwrap();
     let track_file_path = &essentials[1];
