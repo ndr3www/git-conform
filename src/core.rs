@@ -106,7 +106,6 @@ pub fn add(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &
                 if !is_repo {
                     eprintln!("{APP_NAME}: '{repo}' is not a git repository");
                     repos_ok = false;
-                    continue;
                 }
             },
             Err(e) => return Err(e)
