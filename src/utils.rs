@@ -6,6 +6,7 @@
 use std::process::{self, Command, Stdio};
 use std::fs::{OpenOptions, File};
 use std::io::Write;
+use std::path::Path;
 
 use walkdir::{WalkDir, DirEntry};
 
@@ -105,6 +106,45 @@ pub fn path_is_repo(path: &str) -> Result<bool, String> {
         .map_err(|e| format!("{path}: {e}"))?;
 
     Ok(git_status.success())
+}
+
+/// Checks if the given repositories are valid,
+/// prints an error message for every invalid entry
+pub fn repos_valid(repos: &[String]) -> Result<(), String> {
+    let mut repos_ok = true;
+
+    for repo in repos {
+        // Check if the path exists
+        if let Ok(p) = Path::new(&repo).try_exists() {
+            if !p {
+                eprintln!("{APP_NAME}: Repository '{repo}' does not exist");
+                repos_ok = false;
+                continue;
+            }
+        }
+        else {
+            eprintln!("{APP_NAME}: Cannot check the existance of repository '{repo}'");
+            repos_ok = false;
+            continue;
+        }
+
+        // Check if the path is a git repository
+        match path_is_repo(repo) {
+            Ok(is_repo) => {
+                if !is_repo {
+                    eprintln!("{APP_NAME}: '{repo}' is not a git repository");
+                    repos_ok = false;
+                }
+            },
+            Err(e) => return Err(e)
+        };
+    }
+
+    if !repos_ok {
+        return Err(String::from("Repositories validation failed"));
+    }
+
+    Ok(())
 }
 
 /// Prints given error message to the standard error with application name
