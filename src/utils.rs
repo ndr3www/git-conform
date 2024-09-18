@@ -90,8 +90,8 @@ fn entry_is_hidden(entry: &DirEntry) -> bool {
 #[allow(clippy::must_use_candidate)]
 pub fn repo_is_tracked(repo: &str, track_file_contents: &str) -> bool {
     let track_file_lines: Vec<&str> = track_file_contents
-                                        .split('\n')
-                                        .collect();
+        .split('\n')
+        .collect();
 
     track_file_lines.contains(&repo)
 }
