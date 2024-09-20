@@ -8,7 +8,8 @@ use crate::core::{
     list,
     add,
     remove_repos,
-    remove_all
+    remove_all,
+    check_repos
 };
 use crate::utils::{
     APP_NAME,
@@ -107,6 +108,14 @@ fn main() {
             }
             else if let Err(e) = remove_repos(repos.to_owned(), track_file_path.as_str(), track_file_contents.as_str()) {
                 handle_error(&e, 5);
+            }
+        },
+        Commands::Check { repos, all, status, remote } => {
+            if *all {
+                // TODO: check_all
+            }
+            else if let Err(e) = check_repos(repos.to_owned(), &[*status, *remote]) {
+                handle_error(&e, 6);
             }
         }
     };

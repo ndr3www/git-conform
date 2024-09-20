@@ -51,5 +51,22 @@ pub enum Commands {
         #[arg(short, long, group = "repositories")]
         #[arg(default_value_t = false)]
         all: bool
+    },
+    /// Print important details about specified repositories
+    Check {
+        #[arg(required = true, group = "repositories")]
+        repos: Vec<String>,
+        /// Print details about all tracked repositories
+        #[arg(short, long, group = "repositories")]
+        #[arg(default_value_t = false)]
+        all: bool,
+        /// Print only output of `git status`
+        #[arg(short, long)]
+        #[arg(default_value_t = false)]
+        status: bool,
+        /// Print only info about remotes
+        #[arg(short, long)]
+        #[arg(default_value_t = false)]
+        remote: bool
     }
 }

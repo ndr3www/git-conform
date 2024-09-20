@@ -13,6 +13,7 @@ use crate::utils::{
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
+use std::process::{Command, Stdio};
 
 /// Scans specified directories only
 pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
@@ -161,6 +162,128 @@ pub fn remove_all(track_file_path: &str, track_file_contents: &str) -> Result<()
     }
 
     fs::remove_file(track_file_path).map_err(|e| format!("{track_file_path}: {e}"))?;
+
+    Ok(())
+}
+
+// TODO: documentation
+pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String> {
+    // Remove duplicates
+    repos.sort_unstable();
+    repos.dedup();
+
+    repos_valid(repos.as_slice())?;
+
+    // Define the function flags
+    let status = flags[0];
+    let remote = flags[1];
+
+    // Print shorten `git status`
+    if status {
+        // TODO: print status for all branches
+        for repo in &repos {
+            let git_status_out = Command::new("git")
+                .args(["-C", repo.as_str(), "status", "-s"])
+                .stderr(Stdio::null())
+                .output()
+                .map_err(|e| format!("{repo}: {e}"))?
+                .stdout;
+            let git_status_str = String::from_utf8_lossy(git_status_out.as_slice());
+
+            println!("{repo}");
+
+            if git_status_str.is_empty() {
+                println!("  Nothing to commit, working tree clean");
+                continue;
+            }
+
+            for line in git_status_str.lines() {
+                println!("  {}", line.trim());
+            }
+
+            println!();
+        }
+    }
+
+    // Print local - remote commit diffs
+    if remote {
+        for repo in repos {
+            let git_branch_out = Command::new("git")
+                .args(["-C", repo.as_str(), "branch", "-a"])
+                .stderr(Stdio::null())
+                .output()
+                .map_err(|e| format!("{repo}: {e}"))?
+                .stdout;
+            let git_branch_str = String::from_utf8_lossy(git_branch_out.as_slice());
+
+            if git_branch_str.is_empty() {
+                continue;
+            }
+
+            let mut branches: Vec<String> = git_branch_str
+                .split('\n')
+                .map(|mut s| {
+                    s = s.trim();
+                    s.replace("* ", "")
+                })
+                .collect();
+            branches.pop();
+
+            let mut remotes: Vec<String> = Vec::new();
+
+            for _ in 0..branches.len() {
+                if let Some(pos) = branches.iter().position(|s| s.starts_with("remotes/")) {
+                    remotes.push(
+                        branches
+                        .swap_remove(pos)
+                        .replacen("remotes/", "", 1)
+                    );
+                }
+            }
+
+            println!("{repo}");
+            for branch in branches {
+                println!("  {branch}");
+
+                for remote in &remotes {
+                    if !remote.ends_with(format!("/{branch}").as_str()) {
+                        continue;
+                    }
+
+                    let git_rev_list_out = Command::new("git")
+                        .args([
+                            "-C",
+                            repo.as_str(),
+                            "rev-list",
+                            "--left-right",
+                            "--count",
+                            format!("{remote}...{branch}").as_str()
+                        ])
+                        .stderr(Stdio::null())
+                        .output()
+                        .map_err(|e| format!("{repo}: {e}"))?
+                        .stdout;
+                    let git_rev_list_str = String::from_utf8_lossy(git_rev_list_out.as_slice());
+                    let git_rev_list_vec: Vec<&str> = git_rev_list_str.split_whitespace().collect();
+
+                    let (behind, ahead): (u32, u32) = (
+                        git_rev_list_vec[0].parse().unwrap(),
+                        git_rev_list_vec[1].parse().unwrap()
+                    );
+
+                    if behind == 0 && ahead == 0 {
+                        println!("    Up to date with {remote}");
+                        continue;
+                    }
+                    // TODO: print only non-zero commit diffs
+
+                    println!("    {ahead} commits ahead of, {behind} commits behind {remote}");
+                }
+                println!();
+            }
+            println!();
+        }
+    }
 
     Ok(())
 }
