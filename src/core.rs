@@ -175,75 +175,78 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
     repos_valid(repos.as_slice())?;
 
     // Define the function flags
-    let status = flags[0];
-    let remote = flags[1];
+    let print_status = flags[0];
+    let print_remotes = flags[1];
 
-    // Print shorten `git status`
-    if status {
-        // TODO: print status for all branches
-        for repo in &repos {
-            let git_status_out = Command::new("git")
-                .args(["-C", repo.as_str(), "status", "-s"])
-                .stderr(Stdio::null())
-                .output()
-                .map_err(|e| format!("{repo}: {e}"))?
-                .stdout;
-            let git_status_str = String::from_utf8_lossy(git_status_out.as_slice());
+    for repo in repos {
+        let git_branch_out = Command::new("git")
+            .args(["-C", repo.as_str(), "branch"])
+            .stderr(Stdio::null())
+            .output()
+            .map_err(|e| format!("{repo}: {e}"))?
+            .stdout;
+        let git_branch_str = String::from_utf8_lossy(git_branch_out.as_slice());
 
-            println!("{repo}");
-
-            if git_status_str.is_empty() {
-                println!("  Nothing to commit, working tree clean");
-                continue;
-            }
-
-            for line in git_status_str.lines() {
-                println!("  {}", line.trim());
-            }
+        if git_branch_str.is_empty() {
+            continue;
         }
-    }
 
-    // Print local - remote commit diffs
-    if remote {
-        for repo in repos {
-            let git_branch_out = Command::new("git")
-                .args(["-C", repo.as_str(), "branch"])
-                .stderr(Stdio::null())
-                .output()
-                .map_err(|e| format!("{repo}: {e}"))?
-                .stdout;
-            let git_branch_str = String::from_utf8_lossy(git_branch_out.as_slice());
+        let mut branches: Vec<String> = git_branch_str
+            .split('\n')
+            .map(|s| s.replace("* ", ""))
+            .collect();
+        branches.pop();
 
-            if git_branch_str.is_empty() {
-                continue;
-            }
-
-            let mut branches: Vec<String> = git_branch_str
-                .split('\n')
-                .map(|s| s.replace("* ", ""))
-                .collect();
-            branches.pop();
-
+        let mut remotes: Vec<&str> = Vec::new();
+        if print_remotes {
             let git_remote_out = Command::new("git")
                 .args(["-C", repo.as_str(), "remote"])
                 .stderr(Stdio::null())
                 .output()
                 .map_err(|e| format!("{repo}: {e}"))?
                 .stdout;
-            let git_remote_str = String::from_utf8_lossy(git_remote_out.as_slice());
+            let git_remote_str = String::from_utf8_lossy(
+                git_remote_out.as_slice())
+                .to_string();  // just to make the borrow checker happy...
 
-            if git_remote_str.is_empty() {
-                continue;
+            // TODO: fix this borrow checker insanity, sigh
+            if !git_remote_str.is_empty() {
+                remotes = git_remote_str.split('\n').collect();
+                remotes.pop();
+            }
+        }
+
+        println!("{repo}");
+        for branch in branches {
+            println!("  {branch}");
+
+            if print_status {
+                Command::new("git")
+                    .args(["-C", repo.as_str(), "checkout", branch.as_str()])
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .map_err(|e| format!("{repo}: {e}"))?;
+
+                let git_status_out = Command::new("git")
+                    .args(["-C", repo.as_str(), "status", "-s"])
+                    .stderr(Stdio::null())
+                    .output()
+                    .map_err(|e| format!("{repo}: {e}"))?
+                    .stdout;
+                let git_status_str = String::from_utf8_lossy(git_status_out.as_slice());
+
+                if git_status_str.is_empty() {
+                    println!("    Nothing to commit, working tree clean");
+                }
+                else {
+                    for line in git_status_str.lines() {
+                        println!("    {}", line.trim());
+                    }
+                }
             }
 
-            let mut remotes: Vec<&str> = git_remote_str
-                .split('\n')
-                .collect();
-            remotes.pop();
-
-            println!("{repo}");
-            for branch in branches {
-                println!("  {branch}");
+            if print_remotes {
                 for remote in &remotes {
                     let remote = format!("{remote}/{branch}");
 
