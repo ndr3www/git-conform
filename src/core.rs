@@ -200,8 +200,6 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
             for line in git_status_str.lines() {
                 println!("  {}", line.trim());
             }
-
-            println!();
         }
     }
 
@@ -209,7 +207,7 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
     if remote {
         for repo in repos {
             let git_branch_out = Command::new("git")
-                .args(["-C", repo.as_str(), "branch", "-a"])
+                .args(["-C", repo.as_str(), "branch"])
                 .stderr(Stdio::null())
                 .output()
                 .map_err(|e| format!("{repo}: {e}"))?
@@ -222,33 +220,32 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
 
             let mut branches: Vec<String> = git_branch_str
                 .split('\n')
-                .map(|mut s| {
-                    s = s.trim();
-                    s.replace("* ", "")
-                })
+                .map(|s| s.replace("* ", ""))
                 .collect();
             branches.pop();
 
-            let mut remotes: Vec<String> = Vec::new();
+            let git_remote_out = Command::new("git")
+                .args(["-C", repo.as_str(), "remote"])
+                .stderr(Stdio::null())
+                .output()
+                .map_err(|e| format!("{repo}: {e}"))?
+                .stdout;
+            let git_remote_str = String::from_utf8_lossy(git_remote_out.as_slice());
 
-            for _ in 0..branches.len() {
-                if let Some(pos) = branches.iter().position(|s| s.starts_with("remotes/")) {
-                    remotes.push(
-                        branches
-                        .swap_remove(pos)
-                        .replacen("remotes/", "", 1)
-                    );
-                }
+            if git_remote_str.is_empty() {
+                continue;
             }
+
+            let mut remotes: Vec<&str> = git_remote_str
+                .split('\n')
+                .collect();
+            remotes.pop();
 
             println!("{repo}");
             for branch in branches {
                 println!("  {branch}");
-
                 for remote in &remotes {
-                    if !remote.ends_with(format!("/{branch}").as_str()) {
-                        continue;
-                    }
+                    let remote = format!("{remote}/{branch}");
 
                     let git_rev_list_out = Command::new("git")
                         .args([
@@ -279,9 +276,7 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
 
                     println!("    {ahead} commits ahead of, {behind} commits behind {remote}");
                 }
-                println!();
             }
-            println!();
         }
     }
 
