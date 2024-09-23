@@ -11,8 +11,7 @@ use serial_test::serial;
 #[test]
 #[serial]
 fn case_remove_repos_all() {
-    let essentials = common::setup().unwrap();
-    let track_file_path = &essentials[1];
+    let (_home_dir, track_file_path, _tests_dir) = common::setup().unwrap();
 
     #[allow(clippy::items_after_statements)]
     const TRACK_FILE_CONTENTS: &str = "repo1\nrepo2\nrepo3";
@@ -22,12 +21,12 @@ fn case_remove_repos_all() {
         repos.push(line.to_string());
     }
 
-    File::create(track_file_path).unwrap()
+    File::create(&track_file_path).unwrap()
         .write_all(TRACK_FILE_CONTENTS.as_bytes())
         .unwrap();
 
     // The function executes without errors
-    assert_eq!(remove_repos(repos, track_file_path, TRACK_FILE_CONTENTS), Ok(()));
+    assert_eq!(remove_repos(repos, track_file_path.as_str(), TRACK_FILE_CONTENTS), Ok(()));
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(track_file_path).unwrap();
@@ -39,20 +38,19 @@ fn case_remove_repos_all() {
 #[test]
 #[serial]
 fn case_remove_repos_only_one() {
-    let essentials = common::setup().unwrap();
-    let track_file_path = &essentials[1];
+    let (_home_dir, track_file_path, _tests_dir) = common::setup().unwrap();
 
     #[allow(clippy::items_after_statements)]
     const TRACK_FILE_CONTENTS: &str = "repo1\nrepo2\nrepo3";
 
     let repos: Vec<&str> = TRACK_FILE_CONTENTS.split('\n').collect();
 
-    File::create(track_file_path).unwrap()
+    File::create(&track_file_path).unwrap()
         .write_all(TRACK_FILE_CONTENTS.as_bytes())
         .unwrap();
 
     // The function executes without errors
-    assert_eq!(remove_repos(vec![repos[1].to_string()], track_file_path, TRACK_FILE_CONTENTS), Ok(()));
+    assert_eq!(remove_repos(vec![repos[1].to_string()], track_file_path.as_str(), TRACK_FILE_CONTENTS), Ok(()));
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(track_file_path).unwrap();
@@ -64,8 +62,7 @@ fn case_remove_repos_only_one() {
 #[test]
 #[serial]
 fn case_remove_repos_non_existent() {
-    let essentials = common::setup().unwrap();
-    let track_file_path = &essentials[1];
+    let (_home_dir, track_file_path, _tests_dir) = common::setup().unwrap();
 
     #[allow(clippy::items_after_statements)]
     const TRACK_FILE_CONTENTS: &str = "repo1\nrepo2\nrepo3";
@@ -76,12 +73,12 @@ fn case_remove_repos_non_existent() {
         repos.push("fownfnf".to_string());
     }
 
-    File::create(track_file_path).unwrap()
+    File::create(&track_file_path).unwrap()
         .write_all(TRACK_FILE_CONTENTS.as_bytes())
         .unwrap();
 
     // The function executes without errors
-    assert_eq!(remove_repos(repos, track_file_path, TRACK_FILE_CONTENTS), Ok(()));
+    assert_eq!(remove_repos(repos, track_file_path.as_str(), TRACK_FILE_CONTENTS), Ok(()));
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(track_file_path).unwrap();
@@ -92,38 +89,35 @@ fn case_remove_repos_non_existent() {
 
 #[test]
 fn case_remove_repos_empty_tracking_file() {
-    let essentials = common::setup().unwrap();
-    let track_file_path = &essentials[1];
+    let (_home_dir, track_file_path, _tests_dir) = common::setup().unwrap();
 
     // The function executes without errors
-    assert_eq!(remove_repos(vec!["repo2".to_string()], track_file_path, ""), Err(String::from("No repository is being tracked")));
+    assert_eq!(remove_repos(vec!["repo2".to_string()], track_file_path.as_str(), ""), Err(String::from("No repository is being tracked")));
 }
 
 #[test]
 #[serial]
 fn case_remove_all() {
-    let essentials = common::setup().unwrap();
-    let track_file_path = &essentials[1];
+    let (_home_dir, track_file_path, _tests_dir) = common::setup().unwrap();
 
     #[allow(clippy::items_after_statements)]
     const TRACK_FILE_CONTENTS: &str = "repo1\nrepo2\nrepo3";
 
-    File::create(track_file_path).unwrap()
+    File::create(&track_file_path).unwrap()
         .write_all(TRACK_FILE_CONTENTS.as_bytes())
         .unwrap();
 
     // The function executes without errors
-    assert_eq!(remove_all(track_file_path, TRACK_FILE_CONTENTS), Ok(()));
+    assert_eq!(remove_all(track_file_path.as_str(), TRACK_FILE_CONTENTS), Ok(()));
 
     // The tracking file doesn't exist
-    assert!(!Path::new(track_file_path).try_exists().unwrap());
+    assert!(!Path::new(track_file_path.as_str()).try_exists().unwrap());
 }
 
 #[test]
 fn case_remove_all_empty_tracking_file() {
-    let essentials = common::setup().unwrap();
-    let track_file_path = &essentials[1];
+    let (_home_dir, track_file_path, _tests_dir) = common::setup().unwrap();
 
     // The function executes without errors
-    assert_eq!(remove_all(track_file_path, ""), Err(String::from("No repository is being tracked")));
+    assert_eq!(remove_all(track_file_path.as_str(), ""), Err(String::from("No repository is being tracked")));
 }

@@ -4,7 +4,7 @@ use std::fs::{self, File};
 use std::process::{Command, Stdio};
 
 #[allow(unused_assignments)]
-pub fn setup() -> Result<Vec<String>, String> {
+pub fn setup() -> Result<(String, String, String), String> {
     // Obtain the path to user's home directory,
     // the tracking file and it's contents
 
@@ -103,5 +103,5 @@ pub fn setup() -> Result<Vec<String>, String> {
         return Err(String::from("Could not find the home directory"));
     }
 
-    Ok(Vec::from([home_dir, track_file_path, tests_dir]))
+    Ok((home_dir, track_file_path, tests_dir))
 }
