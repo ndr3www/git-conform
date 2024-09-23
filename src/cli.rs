@@ -60,11 +60,11 @@ pub enum Commands {
         #[arg(short, long, group = "repositories")]
         #[arg(default_value_t = false)]
         all: bool,
-        /// Print only output of `git status`
+        /// Print output of `git status`
         #[arg(short, long)]
         #[arg(default_value_t = false)]
         status: bool,
-        /// Print only info about remotes
+        /// Print info about remotes
         #[arg(short, long)]
         #[arg(default_value_t = false)]
         remote: bool
