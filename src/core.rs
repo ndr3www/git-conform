@@ -250,7 +250,6 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
             }
 
             if print_remotes {
-                // TODO: check if a given remote has a specific branch
                 for remote in &remotes {
                     let remote = format!("{remote}/{branch}");
 
@@ -268,6 +267,12 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
                         .map_err(|e| format!("{repo}: {e}"))?
                         .stdout;
                     let git_rev_list_str = String::from_utf8_lossy(git_rev_list_out.as_slice());
+
+                    // Skip if the remote branch doesn't exist
+                    if git_rev_list_str.is_empty() {
+                        continue;
+                    }
+
                     let git_rev_list_vec: Vec<&str> = git_rev_list_str.split_whitespace().collect();
 
                     let (behind, ahead): (u32, u32) = (
