@@ -2,6 +2,7 @@
 
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::missing_panics_doc)]
+#![allow(clippy::too_many_lines)]
 
 use crate::utils::{
     APP_NAME,
@@ -249,6 +250,7 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
             }
 
             if print_remotes {
+                // TODO: check if a given remote has a specific branch
                 for remote in &remotes {
                     let remote = format!("{remote}/{branch}");
 
@@ -277,7 +279,16 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
                         println!("    Up to date with {remote}");
                         continue;
                     }
-                    // TODO: print only non-zero commit diffs
+
+                    if ahead == 0 {
+                        println!("    {behind} commits behind {remote}");
+                        continue;
+                    }
+
+                    if behind == 0 {
+                        println!("    {ahead} commits ahead of {remote}");
+                        continue;
+                    }
 
                     println!("    {ahead} commits ahead of, {behind} commits behind {remote}");
                 }
