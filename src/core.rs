@@ -198,6 +198,9 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
         branches.pop();
 
         let mut remotes: Vec<&str> = Vec::new();
+        let git_remote_str: String;  // this String is binded with
+                                     // the remotes Vec, so it needs
+                                     // to be declared in the same scope
         if print_remotes {
             let git_remote_out = Command::new("git")
                 .args(["-C", repo.as_str(), "remote"])
@@ -205,11 +208,10 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
                 .output()
                 .map_err(|e| format!("{repo}: {e}"))?
                 .stdout;
-            let git_remote_str = String::from_utf8_lossy(
+            git_remote_str = String::from_utf8_lossy(
                 git_remote_out.as_slice())
-                .to_string();  // just to make the borrow checker happy...
+                .to_string();  // avoid borrowing by cloning
 
-            // TODO: fix this borrow checker insanity, sigh
             if !git_remote_str.is_empty() {
                 remotes = git_remote_str.split('\n').collect();
                 remotes.pop();
