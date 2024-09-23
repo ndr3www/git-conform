@@ -180,6 +180,8 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
     let print_remotes = flags[1];
 
     for repo in repos {
+        println!("{repo}");
+
         let git_branch_out = Command::new("git")
             .args(["-C", repo.as_str(), "branch"])
             .stderr(Stdio::null())
@@ -189,6 +191,7 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
         let git_branch_str = String::from_utf8_lossy(git_branch_out.as_slice());
 
         if git_branch_str.is_empty() {
+            println!("  No branches in the current repository");
             continue;
         }
 
@@ -219,7 +222,6 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
             }
         }
 
-        println!("{repo}");
         for branch in branches {
             println!("  {branch}");
 
