@@ -58,7 +58,7 @@ fn main() {
                     };
                 }
 
-                // Write the final the changes to the tracking file
+                // Write the final changes to the tracking file
                 match File::create(&track_file_path) {
                     Ok(mut f) => {
                         match f.write_all(track_file_contents.as_bytes()) {
