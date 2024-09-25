@@ -16,7 +16,7 @@ use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-/// Scans specified directories only
+/// Scans only specified directories
 pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
     // Remove duplicates
     dirs.sort_unstable();
