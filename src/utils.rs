@@ -4,7 +4,7 @@
 #![allow(clippy::missing_panics_doc)]
 
 use std::process::{self, Command, Stdio};
-use std::fs::{OpenOptions, File};
+use std::fs::{self, OpenOptions, File};
 use std::io::Write;
 use std::path::Path;
 
@@ -108,12 +108,15 @@ pub fn path_is_repo(path: &str) -> Result<bool, String> {
     Ok(git_status.success())
 }
 
-/// Checks if the given repositories are valid,
-/// prints an error message for every invalid entry
-pub fn repos_valid(repos: &[String]) -> Result<(), String> {
+/// Checks if the given repositories are valid and makes
+/// their paths absolute, prints an error message for every invalid entry
+pub fn repos_valid(repos: &[String]) -> Result<Vec<String>, String> {
+    // Vector containing absolute paths of the repos
+    let mut repos_abs = Vec::from(repos);
+
     let mut repos_ok = true;
 
-    for repo in repos {
+    for repo in &mut repos_abs {
         // Check if the path exists
         if let Ok(p) = Path::new(&repo).try_exists() {
             if !p {
@@ -138,13 +141,23 @@ pub fn repos_valid(repos: &[String]) -> Result<(), String> {
             },
             Err(e) => return Err(e)
         };
+
+        // Check if the path contains valid UTF-8 characters
+        // and make it absolute, if it does
+        if let Some(s) = fs::canonicalize(&repo).unwrap().to_str() {
+            *repo = s.to_string();
+        }
+        else {
+            eprintln!("{APP_NAME}: {repo}: The path contains invalid UTF-8 characters");
+            repos_ok = false;
+        }
     }
 
     if !repos_ok {
         return Err(String::from("Repositories validation failed"));
     }
 
-    Ok(())
+    Ok(repos_abs)
 }
 
 /// Prints given error message to the standard error with application name

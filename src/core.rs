@@ -26,7 +26,7 @@ pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_conten
 
     let mut dirs_ok = true;
 
-    for dir in &dirs {
+    for dir in &mut dirs {
         let path = Path::new(&dir);
 
         // Check if the path exists
@@ -46,6 +46,16 @@ pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_conten
         // Check if the path leads to a file
         if path.is_file() {
             eprintln!("{APP_NAME}: '{dir}' is not a directory");
+            dirs_ok = false;
+        }
+
+        // Check if the path contains valid UTF-8 characters
+        // and make it absolute, if it does
+        if let Some(s) = fs::canonicalize(&dir).unwrap().to_str() {
+            *dir = s.to_string();
+        }
+        else {
+            eprintln!("{APP_NAME}: {dir}: The path contains invalid UTF-8 characters");
             dirs_ok = false;
         }
     }
@@ -83,7 +93,7 @@ pub fn add(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &
     repos.sort_unstable();
     repos.dedup();
 
-    repos_valid(repos.as_slice())?;
+    repos = repos_valid(repos.as_slice())?;
 
     // Open/create the tracking file for writing
     let mut track_file = OpenOptions::new()
@@ -173,7 +183,7 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
     repos.sort_unstable();
     repos.dedup();
 
-    repos_valid(repos.as_slice())?;
+    repos = repos_valid(repos.as_slice())?;
 
     // Define the function flags
     let print_status = flags[0];
