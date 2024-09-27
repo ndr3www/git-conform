@@ -110,11 +110,11 @@ fn main() {
                 handle_error(&e, 5);
             }
         },
-        Commands::Check { repos, all, status, remote } => {
+        Commands::Check { repos, all } => {
             if *all {
                 // TODO: check_all
             }
-            else if let Err(e) = check_repos(repos.to_owned(), &[*status, *remote]) {
+            else if let Err(e) = check_repos(repos.to_owned()) {
                 handle_error(&e, 6);
             }
         }

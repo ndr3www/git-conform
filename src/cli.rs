@@ -52,21 +52,13 @@ pub enum Commands {
         #[arg(default_value_t = false)]
         all: bool
     },
-    /// Print important details about specified repositories
+    /// Inspect specified repositories
     Check {
         #[arg(required = true, group = "repositories")]
         repos: Vec<String>,
-        /// Print details about all tracked repositories
+        /// Inspect all tracked repositories
         #[arg(short, long, group = "repositories")]
         #[arg(default_value_t = false)]
-        all: bool,
-        /// Print output of `git status`
-        #[arg(short, long)]
-        #[arg(default_value_t = false)]
-        status: bool,
-        /// Print info about remotes
-        #[arg(short, long)]
-        #[arg(default_value_t = false)]
-        remote: bool
+        all: bool
     }
 }

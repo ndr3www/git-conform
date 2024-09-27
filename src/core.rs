@@ -180,19 +180,16 @@ pub fn remove_all(track_file_path: &str, track_file_contents: &str) -> Result<()
 }
 
 // TODO: documentation
-pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String> {
+pub fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
     // Remove duplicates
     repos.sort_unstable();
     repos.dedup();
 
     repos = repos_valid(repos.as_slice())?;
 
-    // Define the function flags
-    let print_status = flags[0];
-    let print_remotes = flags[1];
-
     for repo in repos {
-        println!("{repo}");
+        let mut status_output = String::new();
+        let mut remote_output = String::new();
 
         let git_branch_out = Command::new("git")
             .args(["-C", repo.as_str(), "branch"])
@@ -203,7 +200,6 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
         let git_branch_str = String::from_utf8_lossy(git_branch_out.as_slice());
 
         if git_branch_str.is_empty() {
-            println!("  No branches in the current repository");
             continue;
         }
 
@@ -214,104 +210,105 @@ pub fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String>
         branches.pop();
 
         let mut remotes: Vec<&str> = Vec::new();
-        let git_remote_str: String;  // this String is binded with
-                                     // the remotes Vec, so it needs
-                                     // to be declared in the same scope
-        if print_remotes {
-            let git_remote_out = Command::new("git")
-                .args(["-C", repo.as_str(), "remote"])
+        let git_remote_out = Command::new("git")
+            .args(["-C", repo.as_str(), "remote"])
+            .stderr(Stdio::null())
+            .output()
+            .map_err(|e| format!("{repo}: {e}"))?
+            .stdout;
+        let git_remote_str = String::from_utf8_lossy(git_remote_out.as_slice());
+
+        if !git_remote_str.is_empty() {
+            remotes = git_remote_str.split('\n').collect();
+            remotes.pop();
+        }
+
+        for branch in branches {
+            Command::new("git")
+                .args(["-C", repo.as_str(), "checkout", branch.as_str()])
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .map_err(|e| format!("{repo}: {e}"))?;
+
+            let git_status_out = Command::new("git")
+                .args(["-C", repo.as_str(), "status", "-s"])
                 .stderr(Stdio::null())
                 .output()
                 .map_err(|e| format!("{repo}: {e}"))?
                 .stdout;
-            git_remote_str = String::from_utf8_lossy(
-                git_remote_out.as_slice())
-                .to_string();  // avoid borrowing by cloning
+            let git_status_str = String::from_utf8_lossy(git_status_out.as_slice());
 
-            if !git_remote_str.is_empty() {
-                remotes = git_remote_str.split('\n').collect();
-                remotes.pop();
+            if !git_status_str.is_empty() {
+                status_output.push_str(
+                    format!("  {branch}\n")
+                    .as_str());
+                for line in git_status_str.lines() {
+                    status_output.push_str(
+                        format!("    {}\n", line.trim())
+                        .as_str());
+                }
             }
-        }
 
-        for branch in branches {
-            println!("  {branch}");
+            for remote in &remotes {
+                let remote = format!("{remote}/{branch}");
 
-            if print_status {
-                Command::new("git")
-                    .args(["-C", repo.as_str(), "checkout", branch.as_str()])
-                    .stdout(Stdio::null())
-                    .stderr(Stdio::null())
-                    .status()
-                    .map_err(|e| format!("{repo}: {e}"))?;
-
-                let git_status_out = Command::new("git")
-                    .args(["-C", repo.as_str(), "status", "-s"])
+                let git_rev_list_out = Command::new("git")
+                    .args([
+                        "-C",
+                        repo.as_str(),
+                        "rev-list",
+                        "--left-right",
+                        "--count",
+                        format!("{remote}...{branch}").as_str()
+                    ])
                     .stderr(Stdio::null())
                     .output()
                     .map_err(|e| format!("{repo}: {e}"))?
                     .stdout;
-                let git_status_str = String::from_utf8_lossy(git_status_out.as_slice());
+                let git_rev_list_str = String::from_utf8_lossy(git_rev_list_out.as_slice());
 
-                if git_status_str.is_empty() {
-                    println!("    Nothing to commit, working tree clean");
+                // Skip if the remote branch doesn't exist
+                if git_rev_list_str.is_empty() {
+                    continue;
                 }
-                else {
-                    for line in git_status_str.lines() {
-                        println!("    {}", line.trim());
-                    }
+
+                let git_rev_list_vec: Vec<&str> = git_rev_list_str.split_whitespace().collect();
+
+                let (behind, ahead): (u32, u32) = (
+                    git_rev_list_vec[0].parse().unwrap(),
+                    git_rev_list_vec[1].parse().unwrap()
+                );
+
+                if behind == 0 && ahead == 0 {
+                    continue;
                 }
+
+                if ahead == 0 {
+                    remote_output.push_str(
+                        format!("    {behind} commits behind {remote}\n")
+                        .as_str());
+                    continue;
+                }
+
+                if behind == 0 {
+                    remote_output.push_str(
+                        format!("    {ahead} commits ahead of {remote}\n")
+                        .as_str());
+                    continue;
+                }
+
+                remote_output.push_str(
+                    format!("    {ahead} commits ahead of, {behind} commits behind {remote}\n")
+                    .as_str());
             }
+        }
 
-            if print_remotes {
-                for remote in &remotes {
-                    let remote = format!("{remote}/{branch}");
-
-                    let git_rev_list_out = Command::new("git")
-                        .args([
-                            "-C",
-                            repo.as_str(),
-                            "rev-list",
-                            "--left-right",
-                            "--count",
-                            format!("{remote}...{branch}").as_str()
-                        ])
-                        .stderr(Stdio::null())
-                        .output()
-                        .map_err(|e| format!("{repo}: {e}"))?
-                        .stdout;
-                    let git_rev_list_str = String::from_utf8_lossy(git_rev_list_out.as_slice());
-
-                    // Skip if the remote branch doesn't exist
-                    if git_rev_list_str.is_empty() {
-                        continue;
-                    }
-
-                    let git_rev_list_vec: Vec<&str> = git_rev_list_str.split_whitespace().collect();
-
-                    let (behind, ahead): (u32, u32) = (
-                        git_rev_list_vec[0].parse().unwrap(),
-                        git_rev_list_vec[1].parse().unwrap()
-                    );
-
-                    if behind == 0 && ahead == 0 {
-                        println!("    Up to date with {remote}");
-                        continue;
-                    }
-
-                    if ahead == 0 {
-                        println!("    {behind} commits behind {remote}");
-                        continue;
-                    }
-
-                    if behind == 0 {
-                        println!("    {ahead} commits ahead of {remote}");
-                        continue;
-                    }
-
-                    println!("    {ahead} commits ahead of, {behind} commits behind {remote}");
-                }
-            }
+        // Print the info only if there are any pending changes
+        if !status_output.is_empty() || !remote_output.is_empty() {
+            println!("{repo}");
+            print!("{status_output}");
+            print!("{remote_output}");
         }
     }
 
