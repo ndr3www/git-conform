@@ -51,7 +51,9 @@ pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_conten
 
         // Check if the path contains valid UTF-8 characters
         // and make it absolute, if it does
-        if let Some(s) = fs::canonicalize(&dir).unwrap().to_str() {
+        if let Some(s) = fs::canonicalize(&dir)
+            .map_err(|e| format!("{dir}: {e}"))?
+            .to_str() {
             *dir = s.to_string();
         }
         else {

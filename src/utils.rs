@@ -144,7 +144,9 @@ pub fn repos_valid(repos: &[String]) -> Result<Vec<String>, String> {
 
         // Check if the path contains valid UTF-8 characters
         // and make it absolute, if it does
-        if let Some(s) = fs::canonicalize(&repo).unwrap().to_str() {
+        if let Some(s) = fs::canonicalize(&repo)
+            .map_err(|e| format!("{repo}: {e}"))?
+            .to_str() {
             *repo = s.to_string();
         }
         else {
