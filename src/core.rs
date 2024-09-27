@@ -223,6 +223,14 @@ pub fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
             remotes.pop();
         }
 
+        // TODO: fetching from remotes asynchronously
+        Command::new("git")
+            .args(["-C", repo.as_str(), "fetch", "--all"])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .map_err(|e| format!("{repo}: {e}"))?;
+
         for branch in branches {
             Command::new("git")
                 .args(["-C", repo.as_str(), "checkout", branch.as_str()])
