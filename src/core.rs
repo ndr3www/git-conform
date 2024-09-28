@@ -11,15 +11,10 @@ use crate::utils::{
     repos_valid
 };
 
-use std::borrow::Borrow;
 use std::fs::{self, OpenOptions};
-use std::future::IntoFuture;
 use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
-use std::time::Duration;
-
-use indicatif::{MultiProgress, ProgressBar};
 
 /// Scans only specified directories
 pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
@@ -184,42 +179,15 @@ pub fn remove_all(track_file_path: &str, track_file_contents: &str) -> Result<()
     Ok(())
 }
 
-async fn fetch(multi_prog: MultiProgress, repo: String) -> Result<(), String> {
-    let spinner = multi_prog.add(ProgressBar::new_spinner());
-    spinner.set_message(repo.clone());
-    spinner.enable_steady_tick(Duration::from_millis(80));
-
-    Command::new("git")
-        .args(["-C", repo.as_str(), "fetch", "--all"])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .map_err(|e| format!("{repo}: {e}"))?;
-
-    spinner.finish_and_clear();
-
-    Ok(())
-}
-
 // TODO: documentation
-pub async fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
+pub fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
     // Remove duplicates
     repos.sort_unstable();
     repos.dedup();
 
     repos = repos_valid(repos.as_slice())?;
 
-    let multi_prog = MultiProgress::new();
-
-    let mut fetch_tasks = Vec::new();
-    for repo in repos.clone() {
-        let multi_prog_clone = multi_prog.clone();
-        fetch_tasks.push(tokio::spawn(async move {
-            fetch(multi_prog_clone, repo).await.unwrap();
-        }));
-    }
-
-    for (index, repo) in repos.iter().enumerate() {
+    for repo in repos {
         let mut status_output = String::new();
         let mut remote_output = String::new();
 
@@ -255,9 +223,13 @@ pub async fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
             remotes.pop();
         }
 
-        // TODO: fix this async mess
-        let task = &fetch_tasks[index];
-        task.into_future().await.unwrap();
+        // TODO: fetching from remotes asynchronously
+        Command::new("git")
+            .args(["-C", repo.as_str(), "fetch", "--all"])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .map_err(|e| format!("{repo}: {e}"))?;
 
         for branch in branches {
             Command::new("git")

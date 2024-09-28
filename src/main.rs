@@ -23,8 +23,7 @@ use std::io::Write;
 
 use clap::Parser;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     // Obtain the path to user's home directory,
     // the tracking file and it's contents
 
@@ -115,7 +114,7 @@ async fn main() {
             if *all {
                 // TODO: check_all
             }
-            else if let Err(e) = check_repos(repos.to_owned()).await {
+            else if let Err(e) = check_repos(repos.to_owned()) {
                 handle_error(&e, 6);
             }
         }
