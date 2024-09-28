@@ -98,7 +98,7 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
         .args(["-C", repo, "branch"])
         .stderr(Stdio::null())
         .output()
-        .map_err(|e| format!("{repo}: {e}"))?
+        .map_err(|e| format!("git: {e}"))?
         .stdout;
     let git_branch_str = String::from_utf8_lossy(git_branch_out.as_slice());
 
@@ -117,7 +117,7 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
         .args(["-C", repo, "remote"])
         .stderr(Stdio::null())
         .output()
-        .map_err(|e| format!("{repo}: {e}"))?
+        .map_err(|e| format!("git: {e}"))?
         .stdout;
     let git_remote_str = String::from_utf8_lossy(git_remote_out.as_slice());
 
@@ -131,7 +131,7 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
-        .map_err(|e| format!("{repo}: {e}"))?;
+        .map_err(|e| format!("git: {e}"))?;
 
     for branch in branches {
         Command::new("git")
@@ -139,13 +139,13 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .status()
-            .map_err(|e| format!("{repo}: {e}"))?;
+            .map_err(|e| format!("git: {e}"))?;
 
         let git_status_out = Command::new("git")
             .args(["-C", repo, "status", "-s"])
             .stderr(Stdio::null())
             .output()
-            .map_err(|e| format!("{repo}: {e}"))?
+            .map_err(|e| format!("git: {e}"))?
             .stdout;
         let git_status_str = String::from_utf8_lossy(git_status_out.as_slice());
 
@@ -174,7 +174,7 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
                 ])
                 .stderr(Stdio::null())
                 .output()
-                .map_err(|e| format!("{repo}: {e}"))?
+                .map_err(|e| format!("git: {e}"))?
                 .stdout;
             let git_rev_list_str = String::from_utf8_lossy(git_rev_list_out.as_slice());
 
@@ -241,7 +241,7 @@ pub fn path_is_repo(path: &str) -> Result<bool, String> {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
-        .map_err(|e| format!("{path}: {e}"))?;
+        .map_err(|e| format!("git: {e}"))?;
 
     Ok(git_status.success())
 }
