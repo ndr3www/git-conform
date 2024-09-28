@@ -196,20 +196,20 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
 
             if ahead == 0 {
                 remote_output.push_str(
-                    format!("    {behind} commits behind {remote}\n")
+                    format!("    {behind} commit(s) behind {remote}\n")
                     .as_str());
                 continue;
             }
 
             if behind == 0 {
                 remote_output.push_str(
-                    format!("    {ahead} commits ahead of {remote}\n")
+                    format!("    {ahead} commit(s) ahead of {remote}\n")
                     .as_str());
                 continue;
             }
 
             remote_output.push_str(
-                format!("    {ahead} commits ahead of, {behind} commits behind {remote}\n")
+                format!("    {ahead} commit(s) ahead of, {behind} commit(s) behind {remote}\n")
                 .as_str());
         }
     }
