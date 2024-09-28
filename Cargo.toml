@@ -10,7 +10,9 @@ keywords = []
 categories = []
 
 [dependencies]
+tokio = { version = "1.40.0", features = ["full"] }
 clap = { version = "4.5.16", features = ["derive"] }
+indicatif = "0.17.8"
 walkdir = "2"
 home = "0.5.9"
 

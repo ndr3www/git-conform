@@ -2,19 +2,22 @@
 
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::missing_panics_doc)]
-#![allow(clippy::too_many_lines)]
 
 use crate::utils::{
     APP_NAME,
+    SPINNER_TICK,
     search_for_repos,
     repo_is_tracked,
-    repos_valid
+    repos_valid,
+    inspect_repo
 };
 
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::time::Duration;
+
+use indicatif::{MultiProgress, ProgressBar};
 
 /// Scans only specified directories
 pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
@@ -180,144 +183,39 @@ pub fn remove_all(track_file_path: &str, track_file_contents: &str) -> Result<()
 }
 
 // TODO: documentation
-pub fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
+pub async fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
     // Remove duplicates
     repos.sort_unstable();
     repos.dedup();
 
     repos = repos_valid(repos.as_slice())?;
 
+    let multi_prog = MultiProgress::new();
+    let mut tasks = Vec::new();
+
     for repo in repos {
-        let mut status_output = String::new();
-        let mut remote_output = String::new();
+        let multi_prog_clone = multi_prog.clone();
+        tasks.push(tokio::spawn(async move {
+            let spinner = multi_prog_clone.add(ProgressBar::new_spinner());
+            spinner.set_message(repo.clone());
+            spinner.enable_steady_tick(Duration::from_millis(SPINNER_TICK));
 
-        let git_branch_out = Command::new("git")
-            .args(["-C", repo.as_str(), "branch"])
-            .stderr(Stdio::null())
-            .output()
-            .map_err(|e| format!("{repo}: {e}"))?
-            .stdout;
-        let git_branch_str = String::from_utf8_lossy(git_branch_out.as_slice());
+            match inspect_repo(repo.as_str()) {
+                Ok(output) => {
+                    if output.is_empty() {
+                        spinner.finish_and_clear();
+                    }
+                    else {
+                        spinner.finish_with_message(output);
+                    }
+                },
+                Err(e) => spinner.finish_with_message(format!("{APP_NAME}: {e}"))
+            };
+        }));
+    }
 
-        if git_branch_str.is_empty() {
-            continue;
-        }
-
-        let mut branches: Vec<String> = git_branch_str
-            .split('\n')
-            .map(|s| s.replace("* ", ""))
-            .collect();
-        branches.pop();
-
-        let mut remotes: Vec<&str> = Vec::new();
-        let git_remote_out = Command::new("git")
-            .args(["-C", repo.as_str(), "remote"])
-            .stderr(Stdio::null())
-            .output()
-            .map_err(|e| format!("{repo}: {e}"))?
-            .stdout;
-        let git_remote_str = String::from_utf8_lossy(git_remote_out.as_slice());
-
-        if !git_remote_str.is_empty() {
-            remotes = git_remote_str.split('\n').collect();
-            remotes.pop();
-        }
-
-        // TODO: fetching from remotes asynchronously
-        Command::new("git")
-            .args(["-C", repo.as_str(), "fetch", "--all"])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
-            .map_err(|e| format!("{repo}: {e}"))?;
-
-        for branch in branches {
-            Command::new("git")
-                .args(["-C", repo.as_str(), "checkout", branch.as_str()])
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status()
-                .map_err(|e| format!("{repo}: {e}"))?;
-
-            let git_status_out = Command::new("git")
-                .args(["-C", repo.as_str(), "status", "-s"])
-                .stderr(Stdio::null())
-                .output()
-                .map_err(|e| format!("{repo}: {e}"))?
-                .stdout;
-            let git_status_str = String::from_utf8_lossy(git_status_out.as_slice());
-
-            if !git_status_str.is_empty() {
-                status_output.push_str(
-                    format!("  {branch}\n")
-                    .as_str());
-                for line in git_status_str.lines() {
-                    status_output.push_str(
-                        format!("    {}\n", line.trim())
-                        .as_str());
-                }
-            }
-
-            for remote in &remotes {
-                let remote = format!("{remote}/{branch}");
-
-                let git_rev_list_out = Command::new("git")
-                    .args([
-                        "-C",
-                        repo.as_str(),
-                        "rev-list",
-                        "--left-right",
-                        "--count",
-                        format!("{remote}...{branch}").as_str()
-                    ])
-                    .stderr(Stdio::null())
-                    .output()
-                    .map_err(|e| format!("{repo}: {e}"))?
-                    .stdout;
-                let git_rev_list_str = String::from_utf8_lossy(git_rev_list_out.as_slice());
-
-                // Skip if the remote branch doesn't exist
-                if git_rev_list_str.is_empty() {
-                    continue;
-                }
-
-                let git_rev_list_vec: Vec<&str> = git_rev_list_str.split_whitespace().collect();
-
-                let (behind, ahead): (u32, u32) = (
-                    git_rev_list_vec[0].parse().unwrap(),
-                    git_rev_list_vec[1].parse().unwrap()
-                );
-
-                if behind == 0 && ahead == 0 {
-                    continue;
-                }
-
-                if ahead == 0 {
-                    remote_output.push_str(
-                        format!("    {behind} commits behind {remote}\n")
-                        .as_str());
-                    continue;
-                }
-
-                if behind == 0 {
-                    remote_output.push_str(
-                        format!("    {ahead} commits ahead of {remote}\n")
-                        .as_str());
-                    continue;
-                }
-
-                remote_output.push_str(
-                    format!("    {ahead} commits ahead of, {behind} commits behind {remote}\n")
-                    .as_str());
-            }
-        }
-
-        // Print the info only if there are any pending changes
-        if !status_output.is_empty() || !remote_output.is_empty() {
-            println!("{repo}");
-            print!("{status_output}");
-            print!("{remote_output}");
-        }
+    for task in tasks {
+        task.await.map_err(|e| e.to_string())?;
     }
 
     Ok(())
