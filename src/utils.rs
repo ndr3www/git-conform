@@ -108,7 +108,10 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
 
     let mut branches: Vec<String> = git_branch_str
         .split('\n')
-        .map(|s| s.replace("* ", ""))
+        .map(|mut s| {
+            s = s.trim();
+            s.replace("* ", "")
+        })
         .collect();
     branches.pop();
 
