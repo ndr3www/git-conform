@@ -12,7 +12,7 @@ use std::path::Path;
 use walkdir::{WalkDir, DirEntry};
 
 pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
-pub const SPINNER_TICK: u64 = 80;
+pub const SPINNER_TICK: u64 = 60;
 
 /// Searches recursively in dirs for untracked git repositories and automatically adds them to the tracking file
 #[allow(clippy::redundant_closure_for_method_calls)]
