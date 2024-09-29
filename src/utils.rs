@@ -90,7 +90,7 @@ fn entry_is_hidden(entry: &DirEntry) -> bool {
 // TODO: documentation
 pub fn inspect_repo(repo: &str) -> Result<String, String> {
     let mut status_output = String::new();
-    let mut remote_output = String::new();
+    let mut remotes_output = String::new();
     let mut final_output = String::new();
 
     let git_branch_out = Command::new("git")
@@ -140,16 +140,16 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
             branch_status(repo, branch.as_str())?
             .as_str());
 
-        remote_output.push_str(
+        remotes_output.push_str(
             remotes_diff(repo, branch.as_str(), remotes.clone())?
             .as_str());
     }
 
     // Push the info to the final output only if there are any pending changes
-    if !status_output.is_empty() || !remote_output.is_empty() {
+    if !status_output.is_empty() || !remotes_output.is_empty() {
         final_output.push_str(format!("\r{repo}\n").as_str());
         final_output.push_str(status_output.as_str());
-        final_output.push_str(remote_output.as_str());
+        final_output.push_str(remotes_output.as_str());
     }
 
     Ok(final_output)
