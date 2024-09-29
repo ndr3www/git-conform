@@ -87,12 +87,12 @@ fn entry_is_hidden(entry: &DirEntry) -> bool {
         .is_some_and(|s| s.starts_with('.') && s != ".git")
 }
 
-/// Retrieves the status of every branch in a given repository
-/// and the difference in the number of commits between each branch
+/// Retrieves the status of a given repository and the
+/// difference in the number of commits between each branch
 /// and the respective remote, returns a String with
 /// the output of each operation
 pub fn inspect_repo(repo: &str) -> Result<String, String> {
-    let mut status_output = String::new();
+    let status_output = repo_status(repo)?;
     let mut remotes_output = String::new();
     let mut final_output = String::new();
 
@@ -149,10 +149,6 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
 
     // Inspect each branch
     for branch in branches {
-        status_output.push_str(
-            branch_status(repo, branch.as_str())?
-            .as_str());
-
         remotes_output.push_str(
             remotes_diff(repo, branch.as_str(), remotes.clone())?
             .as_str());
@@ -168,17 +164,9 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
     Ok(final_output)
 }
 
-// Obtains the output of `git status` for a given branch
-fn branch_status(repo: &str, branch: &str) -> Result<String, String> {
+// Obtains the output of `git status` for a given repository
+fn repo_status(repo: &str) -> Result<String, String> {
     let mut output = String::new();
-
-    // Switch to the specified branch
-    Command::new("git")
-        .args(["-C", repo, "checkout", branch])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .map_err(|e| format!("git: {e}"))?;
 
     // Get the shorten output of `git status`
     let git_status_out = Command::new("git")
@@ -192,12 +180,9 @@ fn branch_status(repo: &str, branch: &str) -> Result<String, String> {
     // Push the details to the output only if
     // `git status` didn't return an empty string
     if !git_status_str.is_empty() {
-        output.push_str(
-            format!("  {branch}\n")
-            .as_str());
         for line in git_status_str.lines() {
             output.push_str(
-                format!("    {}\n", line.trim())
+                format!("  {}\n", line.trim())
                 .as_str());
         }
     }
@@ -248,6 +233,10 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
         if behind == 0 && ahead == 0 {
             continue;
         }
+
+        output.push_str(
+            format!("  {branch}\n")
+            .as_str());
 
         if ahead == 0 {
             output.push_str(
