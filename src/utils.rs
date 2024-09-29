@@ -87,12 +87,16 @@ fn entry_is_hidden(entry: &DirEntry) -> bool {
         .is_some_and(|s| s.starts_with('.') && s != ".git")
 }
 
-// TODO: documentation
+/// Retrieves the status of every branch in a given repository
+/// and the difference in the number of commits between each branch
+/// and the respective remote, returns a String with
+/// the output of each operation
 pub fn inspect_repo(repo: &str) -> Result<String, String> {
     let mut status_output = String::new();
     let mut remotes_output = String::new();
     let mut final_output = String::new();
 
+    // Get the list of branches
     let git_branch_out = Command::new("git")
         .args(["-C", repo, "branch"])
         .stderr(Stdio::null())
@@ -101,10 +105,12 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
         .stdout;
     let git_branch_str = String::from_utf8_lossy(git_branch_out.as_slice());
 
+    // Leave if there are no branches in the repository
     if git_branch_str.is_empty() {
         return Ok(final_output)
     }
 
+    // Format each entry in the branches string and put it in Vec
     let mut branches: Vec<String> = git_branch_str
         .split('\n')
         .map(|mut s| {
@@ -112,8 +118,10 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
             s.replace("* ", "")
         })
         .collect();
-    branches.pop();
+    branches.pop();  // The last element is an empty string,
+                     // so we need to get rid of it
 
+    // Get the list of remotes
     let mut remotes: Vec<&str> = Vec::new();
     let git_remote_out = Command::new("git")
         .args(["-C", repo, "remote"])
@@ -123,11 +131,15 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
         .stdout;
     let git_remote_str = String::from_utf8_lossy(git_remote_out.as_slice());
 
+    // Populate the remotes Vec only if there are
+    // any remotes in the repository
     if !git_remote_str.is_empty() {
         remotes = git_remote_str.split('\n').collect();
-        remotes.pop();
+        remotes.pop();  // Empty string, needs to be removed
     }
 
+    // Fetch from all remote branches, so the function
+    // remotes_diff can obtain the latest data
     Command::new("git")
         .args(["-C", repo, "fetch", "--all"])
         .stdout(Stdio::null())
@@ -135,6 +147,7 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
         .status()
         .map_err(|e| format!("git: {e}"))?;
 
+    // Inspect each branch
     for branch in branches {
         status_output.push_str(
             branch_status(repo, branch.as_str())?
@@ -155,10 +168,11 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
     Ok(final_output)
 }
 
-// TODO: documentation
+// Obtains the output of `git status` for a given branch
 fn branch_status(repo: &str, branch: &str) -> Result<String, String> {
     let mut output = String::new();
 
+    // Switch to the specified branch
     Command::new("git")
         .args(["-C", repo, "checkout", branch])
         .stdout(Stdio::null())
@@ -166,6 +180,7 @@ fn branch_status(repo: &str, branch: &str) -> Result<String, String> {
         .status()
         .map_err(|e| format!("git: {e}"))?;
 
+    // Get the shorten output of `git status`
     let git_status_out = Command::new("git")
         .args(["-C", repo, "status", "-s"])
         .stderr(Stdio::null())
@@ -174,6 +189,8 @@ fn branch_status(repo: &str, branch: &str) -> Result<String, String> {
         .stdout;
     let git_status_str = String::from_utf8_lossy(git_status_out.as_slice());
 
+    // Push the details to the output only if
+    // `git status` didn't return an empty string
     if !git_status_str.is_empty() {
         output.push_str(
             format!("  {branch}\n")
@@ -188,13 +205,15 @@ fn branch_status(repo: &str, branch: &str) -> Result<String, String> {
     Ok(output)
 }
 
-// TODO: documentation
+// Retrieves the difference in the number of commits between a given branch and remotes,
+// formats the output and returns it in a String
 fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, String> {
     let mut output = String::new();
 
     for remote in remotes {
         let remote = format!("{remote}/{branch}");
 
+        // Get the difference between the remote and local branch
         let git_rev_list_out = Command::new("git")
             .args([
                 "-C",
@@ -215,12 +234,16 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
             continue;
         }
 
+        // Retrieve the commit numbers
         let git_rev_list_vec: Vec<&str> = git_rev_list_str.split_whitespace().collect();
 
+        // Parse the numbers
         let (behind, ahead): (u32, u32) = (
             git_rev_list_vec[0].parse().unwrap(),
             git_rev_list_vec[1].parse().unwrap()
         );
+
+        // Push only relevant info to the output
 
         if behind == 0 && ahead == 0 {
             continue;

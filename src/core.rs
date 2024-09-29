@@ -182,7 +182,8 @@ pub fn remove_all(track_file_path: &str, track_file_contents: &str) -> Result<()
     Ok(())
 }
 
-// TODO: documentation
+/// Asynchronously retrieves important details about each repo
+/// in the repos Vec and prints them to the standard output
 pub async fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
     // Remove duplicates
     repos.sort_unstable();
@@ -190,11 +191,14 @@ pub async fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
 
     repos = repos_valid(repos.as_slice())?;
 
+    // Handler for async spinners
     let multi_prog = MultiProgress::new();
-    let mut tasks = Vec::new();
 
+    // Create an async task for each repo
+    let mut tasks = Vec::new();
     for repo in repos {
         let multi_prog_clone = multi_prog.clone();
+
         tasks.push(tokio::spawn(async move {
             let spinner = multi_prog_clone.add(ProgressBar::new_spinner());
             spinner.set_message(repo.clone());
@@ -214,6 +218,7 @@ pub async fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
         }));
     }
 
+    // Execute the tasks
     for task in tasks {
         task.await.map_err(|e| e.to_string())?;
     }
