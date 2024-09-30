@@ -134,9 +134,7 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
     repos.sort_unstable();
     repos.dedup();
 
-    let mut track_file_lines: Vec<&str> = track_file_contents.split('\n').collect();
-    track_file_lines.pop();  // The last element of vector is an empty string,
-                             // so we need to get rid of it
+    let mut track_file_lines: Vec<&str> = track_file_contents.lines().collect();
 
     // Open/create the tracking file for writing
     let mut track_file = OpenOptions::new()

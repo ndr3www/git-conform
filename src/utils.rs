@@ -111,15 +111,13 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
     }
 
     // Format each entry in the branches string and put it in Vec
-    let mut branches: Vec<String> = git_branch_str
-        .split('\n')
+    let branches: Vec<String> = git_branch_str
+        .lines()
         .map(|mut s| {
             s = s.trim();
             s.replace("* ", "")
         })
         .collect();
-    branches.pop();  // The last element is an empty string,
-                     // so we need to get rid of it
 
     // Get the list of remotes
     let mut remotes: Vec<&str> = Vec::new();
@@ -134,8 +132,7 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
     // Populate the remotes Vec only if there are
     // any remotes in the repository
     if !git_remote_str.is_empty() {
-        remotes = git_remote_str.split('\n').collect();
-        remotes.pop();  // Empty string, needs to be removed
+        remotes = git_remote_str.lines().collect();
     }
 
     // Fetch from all remote branches, so the function
@@ -264,7 +261,7 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
 #[allow(clippy::must_use_candidate)]
 pub fn repo_is_tracked(repo: &str, track_file_contents: &str) -> bool {
     let track_file_lines: Vec<&str> = track_file_contents
-        .split('\n')
+        .lines()
         .collect();
 
     track_file_lines.contains(&repo)

@@ -43,7 +43,7 @@ fn case_remove_repos_only_one() {
     #[allow(clippy::items_after_statements)]
     const TRACK_FILE_CONTENTS: &str = "repo1\nrepo2\nrepo3";
 
-    let repos: Vec<&str> = TRACK_FILE_CONTENTS.split('\n').collect();
+    let repos: Vec<&str> = TRACK_FILE_CONTENTS.lines().collect();
 
     File::create(&track_file_path).unwrap()
         .write_all(TRACK_FILE_CONTENTS.as_bytes())
