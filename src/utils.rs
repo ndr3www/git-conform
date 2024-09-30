@@ -79,7 +79,7 @@ fn search_core(entry: &DirEntry, mut track_file: &File, track_file_path: &str, t
     Ok(())
 }
 
-// Checks if the given entry is a hidden directory
+// Checks if a given entry is a hidden directory
 // excluding .git directories
 fn entry_is_hidden(entry: &DirEntry) -> bool {
     entry.file_name()
@@ -257,7 +257,7 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
     Ok(output)
 }
 
-/// Checks if the given repository has an entry in the tracking file
+/// Checks if a given repository has an entry in the tracking file
 #[allow(clippy::must_use_candidate)]
 pub fn repo_is_tracked(repo: &str, track_file_contents: &str) -> bool {
     let track_file_lines: Vec<&str> = track_file_contents
@@ -267,7 +267,7 @@ pub fn repo_is_tracked(repo: &str, track_file_contents: &str) -> bool {
     track_file_lines.contains(&repo)
 }
 
-/// Checks if the given path is a git repository
+/// Checks if a given path is a git repository
 pub fn path_is_repo(path: &str) -> Result<bool, String> {
     let git_status = Command::new("git")
         .args(["-C", path, "status"])
