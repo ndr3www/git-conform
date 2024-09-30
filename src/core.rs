@@ -225,3 +225,52 @@ pub async fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
 
     Ok(())
 }
+
+/// Asynchronously retrieves important details about each repo
+/// in the tracking file and prints them to the standard output
+pub async fn check_all(track_file_contents: &str) -> Result<(), String> {
+    if track_file_contents.is_empty() {
+        return Err(String::from("No repository is being tracked"));
+    }
+
+    // Put all the tracking file entries in a Vec to
+    // avoid lifetime constraints on async tasks
+    let track_file_lines: Vec<String> = track_file_contents
+        .lines()
+        .map(String::from)
+        .collect();
+
+    // Handler for async spinners
+    let multi_prog = MultiProgress::new();
+
+    // Create an async task for each repo
+    let mut tasks = Vec::new();
+    for line in track_file_lines {
+        let multi_prog_clone = multi_prog.clone();
+
+        tasks.push(tokio::spawn(async move {
+            let spinner = multi_prog_clone.add(ProgressBar::new_spinner());
+            spinner.set_message(line.clone());
+            spinner.enable_steady_tick(Duration::from_millis(SPINNER_TICK));
+
+            match inspect_repo(line.as_str()) {
+                Ok(output) => {
+                    if output.is_empty() {
+                        spinner.finish_and_clear();
+                    }
+                    else {
+                        spinner.finish_with_message(output);
+                    }
+                },
+                Err(e) => spinner.finish_with_message(format!("{APP_NAME}: {e}"))
+            };
+        }));
+    }
+
+    // Execute the tasks
+    for task in tasks {
+        task.await.map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}

@@ -9,7 +9,8 @@ use crate::core::{
     add,
     remove_repos,
     remove_all,
-    check_repos
+    check_repos,
+    check_all
 };
 use crate::utils::{
     APP_NAME,
@@ -113,7 +114,9 @@ async fn main() {
         },
         Commands::Check { repos, all } => {
             if *all {
-                // TODO: check_all
+                if let Err(e) = check_all(track_file_contents.as_str()).await {
+                    handle_error(&e, 6);
+                }
             }
             else if let Err(e) = check_repos(repos.to_owned()).await {
                 handle_error(&e, 6);
