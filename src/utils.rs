@@ -231,10 +231,6 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
             continue;
         }
 
-        output.push_str(
-            format!("  {branch}\n")
-            .as_str());
-
         if ahead == 0 {
             output.push_str(
                 format!("    {behind} commit(s) behind {remote}\n")
@@ -252,6 +248,11 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
         output.push_str(
             format!("    {ahead} commit(s) ahead of, {behind} commit(s) behind {remote}\n")
             .as_str());
+    }
+
+    // Put the local branch name at the beginning if the output isn't empty
+    if !output.is_empty() {
+        output.insert_str(0, format!("  {branch}\n").as_str());
     }
 
     Ok(output)
