@@ -67,6 +67,16 @@ async fn case_check_repos_files() {
 }
 
 #[tokio::test]
+async fn case_check_all() {
+    let (_home_dir, _track_file_path, tests_dir) = common::setup().unwrap();
+
+    let track_file_contents = format!("{tests_dir}/repo1\n{tests_dir}/repo2\n{tests_dir}/repo3");
+
+    // The function executes without errors
+    assert_eq!(check_all(track_file_contents.as_str()).await, Ok(()));
+}
+
+#[tokio::test]
 async fn case_check_all_empty_tracking_file() {
     // The function throws an error
     assert_eq!(check_all("").await, Err(String::from("No repository is being tracked")));
