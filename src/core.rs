@@ -13,7 +13,7 @@ use crate::utils::{
 };
 
 use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::io::Write as _;
 use std::path::Path;
 use std::time::Duration;
 

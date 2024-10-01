@@ -5,7 +5,7 @@
 
 use std::process::{self, Command, Stdio};
 use std::fs::{self, OpenOptions, File};
-use std::io::Write;
+use std::io::Write as _;
 use std::fmt::Write as _;
 use std::path::Path;
 

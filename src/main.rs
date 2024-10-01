@@ -20,7 +20,7 @@ use crate::utils::{
 use crate::cli::{Cli, Commands};
 
 use std::fs::{self, File};
-use std::io::Write;
+use std::io::Write as _;
 
 use clap::Parser;
 
