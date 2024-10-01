@@ -21,6 +21,7 @@ use crate::cli::{Cli, Commands};
 
 use std::fs::{self, File};
 use std::io::Write as _;
+use std::fmt::Write as _;
 
 use clap::Parser;
 
@@ -53,7 +54,9 @@ async fn main() {
                     match path_is_repo(line) {
                         Ok(is_repo) => {
                             if is_repo {
-                                track_file_contents.push_str(format!("{line}\n").as_str());
+                                if let Err(e) = writeln!(track_file_contents, "{line}") {
+                                    handle_error(e.to_string().as_str(), 1);
+                                }
                             }
                         },
                         Err(e) => handle_error(e.as_str(), 1)
