@@ -6,6 +6,7 @@
 use std::process::{self, Command, Stdio};
 use std::fs::{self, OpenOptions, File};
 use std::io::Write;
+use std::fmt::Write as _;
 use std::path::Path;
 
 use walkdir::{WalkDir, DirEntry};
@@ -146,9 +147,12 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
 
     // Inspect each branch
     for branch in branches {
-        remotes_output.push_str(
+        write!(
+            remotes_output,
+            "{}",
             remotes_diff(repo, branch.as_str(), remotes.clone())?
-            .as_str());
+        )
+        .map_err(|e| e.to_string())?;
     }
 
     // Push the info to the final output only if there are any pending changes
@@ -178,9 +182,8 @@ fn repo_status(repo: &str) -> Result<String, String> {
     // `git status` didn't return an empty string
     if !git_status_str.is_empty() {
         for line in git_status_str.lines() {
-            output.push_str(
-                format!("  {}\n", line.trim())
-                .as_str());
+            writeln!(output, "  {}", line.trim())
+                .map_err(|e| e.to_string())?;
         }
     }
 
@@ -232,22 +235,19 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
         }
 
         if ahead == 0 {
-            output.push_str(
-                format!("    {behind} commit(s) behind {remote}\n")
-                .as_str());
+            writeln!(output, "    {behind} commit(s) behind {remote}")
+                .map_err(|e| e.to_string())?;
             continue;
         }
 
         if behind == 0 {
-            output.push_str(
-                format!("    {ahead} commit(s) ahead of {remote}\n")
-                .as_str());
+            writeln!(output, "    {ahead} commit(s) ahead of {remote}")
+                .map_err(|e| e.to_string())?;
             continue;
         }
 
-        output.push_str(
-            format!("    {ahead} commit(s) ahead of, {behind} commit(s) behind {remote}\n")
-            .as_str());
+        writeln!(output, "    {ahead} commit(s) ahead of, {behind} commit(s) behind {remote}")
+            .map_err(|e| e.to_string())?;
     }
 
     // Put the local branch name at the beginning if the output isn't empty
