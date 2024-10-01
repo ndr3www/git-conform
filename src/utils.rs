@@ -155,11 +155,9 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
         .map_err(|e| e.to_string())?;
     }
 
-    // Push the info to the final output only if there are any pending changes
+    // Assign the info to the final output only if there are any pending changes
     if !status_output.is_empty() || !remotes_output.is_empty() {
-        final_output.push_str(format!("\r{repo}\n").as_str());
-        final_output.push_str(status_output.as_str());
-        final_output.push_str(remotes_output.as_str());
+        final_output = format!("\r{repo}\n{status_output}{remotes_output}");
     }
 
     Ok(final_output)
