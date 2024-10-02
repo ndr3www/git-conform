@@ -185,9 +185,9 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
     let mut output = String::new();
 
     for remote in remotes {
-        // Fetch the latest data from the remote repository
+        // Fetch the latest data from the remote branch
         Command::new("git")
-            .args(["-C", repo, "fetch", remote])
+            .args(["-C", repo, "fetch", remote, branch])
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .status()
