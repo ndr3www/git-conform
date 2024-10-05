@@ -136,6 +136,16 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
         remotes = git_remote_str.lines().collect();
     }
 
+    // Fetch the latest data from remote repositories
+    for remote in &remotes {
+        Command::new("git")
+            .args(["-C", repo, "fetch", remote])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .map_err(|e| format!("git: {e}"))?;
+    }
+
     // Inspect each branch
     for branch in branches {
         write!(
@@ -185,14 +195,6 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
     let mut output = String::new();
 
     for remote in remotes {
-        // Fetch the latest data from the remote branch
-        Command::new("git")
-            .args(["-C", repo, "fetch", remote, branch])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
-            .map_err(|e| format!("git: {e}"))?;
-
         let remote = format!("{remote}/{branch}");
 
         // Get the difference between the remote and local branch
