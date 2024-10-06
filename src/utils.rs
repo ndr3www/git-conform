@@ -8,8 +8,10 @@ use std::fs::{self, OpenOptions, File};
 use std::io::Write as _;
 use std::fmt::Write as _;
 use std::path::Path;
+use std::time::Duration;
 
 use walkdir::{WalkDir, DirEntry};
+use wait_timeout::ChildExt;
 
 pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
 pub const SPINNER_TICK: u64 = 60;
@@ -138,12 +140,21 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
 
     // Fetch the latest data from remote repositories
     for remote in &remotes {
-        Command::new("git")
+        let mut git_fetch = Command::new("git")
             .args(["-C", repo, "fetch", remote])
             .stdout(Stdio::null())
             .stderr(Stdio::null())
-            .status()
+            .spawn()
             .map_err(|e| format!("git: {e}"))?;
+
+        // Wait 10 seconds for fetching to finish, if it's still
+        // running after the time has elapsed, kill the process
+        if git_fetch.wait_timeout(Duration::from_secs(10))
+            .map_err(|e| format!("git fetch: {e}"))?
+            .is_none() {
+            git_fetch.kill().map_err(|e| format!("git fetch: {e}"))?;
+            git_fetch.wait().map_err(|e| format!("git fetch: {e}"))?;
+        }
     }
 
     // Inspect each branch
