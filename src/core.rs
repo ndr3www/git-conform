@@ -5,19 +5,15 @@
 
 use crate::utils::{
     APP_NAME,
-    SPINNER_TICK,
     search_for_repos,
     repo_is_tracked,
     repos_valid,
-    inspect_repo
+    exec_async_check
 };
 
 use std::fs::{self, OpenOptions};
 use std::io::Write as _;
 use std::path::Path;
-use std::time::Duration;
-
-use indicatif::{MultiProgress, ProgressBar};
 
 /// Scans only specified directories
 pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
@@ -189,37 +185,7 @@ pub async fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
 
     repos = repos_valid(repos.as_slice())?;
 
-    // Handler for async spinners
-    let multi_prog = MultiProgress::new();
-
-    // Create an async task for each repo
-    let mut tasks = Vec::new();
-    for repo in repos {
-        let multi_prog_clone = multi_prog.clone();
-
-        tasks.push(tokio::spawn(async move {
-            let spinner = multi_prog_clone.add(ProgressBar::new_spinner());
-            spinner.set_message(repo.clone());
-            spinner.enable_steady_tick(Duration::from_millis(SPINNER_TICK));
-
-            match inspect_repo(repo.as_str()) {
-                Ok(output) => {
-                    if output.is_empty() {
-                        spinner.finish_and_clear();
-                    }
-                    else {
-                        spinner.finish_with_message(output);
-                    }
-                },
-                Err(e) => spinner.finish_with_message(format!("{APP_NAME}: {e}"))
-            };
-        }));
-    }
-
-    // Execute the tasks
-    for task in tasks {
-        task.await.map_err(|e| e.to_string())?;
-    }
+    exec_async_check(repos).await?;
 
     Ok(())
 }
@@ -238,37 +204,7 @@ pub async fn check_all(track_file_contents: &str) -> Result<(), String> {
         .map(String::from)
         .collect();
 
-    // Handler for async spinners
-    let multi_prog = MultiProgress::new();
-
-    // Create an async task for each repo
-    let mut tasks = Vec::new();
-    for line in track_file_lines {
-        let multi_prog_clone = multi_prog.clone();
-
-        tasks.push(tokio::spawn(async move {
-            let spinner = multi_prog_clone.add(ProgressBar::new_spinner());
-            spinner.set_message(line.clone());
-            spinner.enable_steady_tick(Duration::from_millis(SPINNER_TICK));
-
-            match inspect_repo(line.as_str()) {
-                Ok(output) => {
-                    if output.is_empty() {
-                        spinner.finish_and_clear();
-                    }
-                    else {
-                        spinner.finish_with_message(output);
-                    }
-                },
-                Err(e) => spinner.finish_with_message(format!("{APP_NAME}: {e}"))
-            };
-        }));
-    }
-
-    // Execute the tasks
-    for task in tasks {
-        task.await.map_err(|e| e.to_string())?;
-    }
+    exec_async_check(track_file_lines).await?;
 
     Ok(())
 }

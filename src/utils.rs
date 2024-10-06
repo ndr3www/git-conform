@@ -12,6 +12,7 @@ use std::time::Duration;
 
 use walkdir::{WalkDir, DirEntry};
 use wait_timeout::ChildExt;
+use indicatif::{MultiProgress, ProgressBar};
 
 pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
 pub const SPINNER_TICK: u64 = 60;
@@ -90,11 +91,48 @@ fn entry_is_hidden(entry: &DirEntry) -> bool {
         .is_some_and(|s| s.starts_with('.') && s != ".git")
 }
 
+// TODO: documentation
+pub async fn exec_async_check(repos: Vec<String>) -> Result<(), String> {
+    // Handler for async spinners
+    let multi_prog = MultiProgress::new();
+
+    // Create an async task for each repo
+    let mut tasks = Vec::new();
+    for repo in repos {
+        let multi_prog_clone = multi_prog.clone();
+
+        tasks.push(tokio::spawn(async move {
+            let spinner = multi_prog_clone.add(ProgressBar::new_spinner());
+            spinner.set_message(repo.clone());
+            spinner.enable_steady_tick(Duration::from_millis(SPINNER_TICK));
+
+            match inspect_repo(repo.as_str()) {
+                Ok(output) => {
+                    if output.is_empty() {
+                        spinner.finish_and_clear();
+                    }
+                    else {
+                        spinner.finish_with_message(output);
+                    }
+                },
+                Err(e) => spinner.finish_with_message(format!("{APP_NAME}: {e}"))
+            };
+        }));
+    }
+
+    // Execute the tasks
+    for task in tasks {
+        task.await.map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
 /// Retrieves the status of a given repository and the
 /// difference in the number of commits between each branch
 /// and the respective remote, returns a String with
 /// the output of each operation
-pub fn inspect_repo(repo: &str) -> Result<String, String> {
+fn inspect_repo(repo: &str) -> Result<String, String> {
     let status_output = repo_status(repo)?;
     let mut remotes_output = String::new();
     let mut final_output = String::new();
