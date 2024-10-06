@@ -148,7 +148,7 @@ pub fn inspect_repo(repo: &str) -> Result<String, String> {
             .map_err(|e| format!("git: {e}"))?;
 
         // Wait 10 seconds for fetching to finish, if it's still
-        // running after the time has elapsed, kill the process
+        // running after that time, kill the process
         if git_fetch.wait_timeout(Duration::from_secs(10))
             .map_err(|e| format!("git fetch: {e}"))?
             .is_none() {
