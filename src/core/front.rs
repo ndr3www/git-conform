@@ -132,6 +132,21 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
     repos.sort_unstable();
     repos.dedup();
 
+    let mut repos_ok = true;
+
+    // Repositories validation
+    for repo in &repos {
+        // Check if the tracking file contains the git repository
+        if !repo_is_tracked(repo.as_str(), track_file_contents) {
+            eprintln!("{APP_NAME}: '{repo}' is not being tracked");
+            repos_ok = false;
+        }
+    }
+
+    if !repos_ok {
+        return Err(String::from("Repositories validation failed"));
+    }
+
     let mut track_file_lines: Vec<&str> = track_file_contents.lines().collect();
 
     // Open/create the tracking file for writing
@@ -142,13 +157,6 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
         .map_err(|e| format!("{track_file_path}: {e}"))?;
 
     for repo in repos {
-        // Check if the tracking file
-        // contains the git repository
-        if !repo_is_tracked(repo.as_str(), track_file_contents) {
-            println!("{APP_NAME}: '{repo}' is not being tracked");
-            continue;
-        }
-
         // Remove specified repositories from the vector
         if let Some(last) = track_file_lines.last() {
             if repo.trim() == last.trim() {

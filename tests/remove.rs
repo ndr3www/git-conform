@@ -73,18 +73,8 @@ fn case_remove_repos_non_existent() {
         repos.push("fownfnf".to_string());
     }
 
-    File::create(&track_file_path).unwrap()
-        .write_all(TRACK_FILE_CONTENTS.as_bytes())
-        .unwrap();
-
-    // The function executes without errors
-    assert_eq!(remove_repos(repos, track_file_path.as_str(), TRACK_FILE_CONTENTS), Ok(()));
-
-    // Read the updated tracking file
-    let track_file_up = fs::read_to_string(track_file_path).unwrap();
-
-    // The tracking file is empty
-    assert!(track_file_up.is_empty());
+    // The function throws an error
+    assert_eq!(remove_repos(repos, track_file_path.as_str(), TRACK_FILE_CONTENTS), Err(String::from("Repositories validation failed")));
 }
 
 #[test]
