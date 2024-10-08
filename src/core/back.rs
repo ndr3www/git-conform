@@ -91,7 +91,7 @@ fn entry_is_hidden(entry: &DirEntry) -> bool {
         .is_some_and(|s| s.starts_with('.') && s != ".git")
 }
 
-// TODO: documentation
+// Core functionality of the `check` command
 pub async fn exec_async_check(repos: Vec<String>) -> Result<(), String> {
     // Handler for async spinners
     let multi_prog = MultiProgress::new();
