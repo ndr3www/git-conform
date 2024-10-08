@@ -3,6 +3,7 @@
 use crate::utils::{
     APP_NAME,
     SPINNER_TICK,
+    TrackingFile,
     repo_is_tracked,
     path_is_repo
 };
@@ -20,13 +21,13 @@ use indicatif::{MultiProgress, ProgressBar};
 
 // Searches recursively in dirs for untracked git repositories and automatically adds them to the tracking file
 #[allow(clippy::redundant_closure_for_method_calls)]
-pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
+pub fn search_for_repos(dirs: &[String], tracking_file: &TrackingFile, scan_hidden: bool) -> Result<(), String> {
     // Open/create the tracking file for writing
     let track_file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open(track_file_path)
-        .map_err(|e| format!("{track_file_path}: {e}"))?;
+        .open(tracking_file.path.clone())
+        .map_err(|e| format!("{}: {e}", tracking_file.path))?;
 
     if scan_hidden {
         for dir in dirs {
@@ -35,7 +36,7 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
                 .same_file_system(true)
                 .into_iter()
                 .filter_map(|n| n.ok()) {
-                    search_core(&entry, &track_file, track_file_path, track_file_contents)?;
+                    search_core(&entry, &track_file, tracking_file.path.as_str(), tracking_file.contents.as_str())?;
             }
         }
     }
@@ -47,7 +48,7 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
                 .into_iter()
                 .filter_entry(|n| !entry_is_hidden(n))
                 .filter_map(|n| n.ok()) {
-                    search_core(&entry, &track_file, track_file_path, track_file_contents)?;
+                    search_core(&entry, &track_file, tracking_file.path.as_str(), tracking_file.contents.as_str())?;
             }
         }
     }

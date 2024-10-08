@@ -1,16 +1,19 @@
-use git_conform::utils::APP_NAME;
+use git_conform::utils::{APP_NAME, TrackingFile};
 
 use std::fs::{self, File};
 use std::process::{Command, Stdio};
 
 #[allow(unused_assignments)]
-pub fn setup() -> Result<(String, String, String), String> {
+pub fn setup() -> Result<(String, TrackingFile, String), String> {
     // Obtain the path to user's home directory,
     // the tracking file and it's contents
 
-    let mut home_dir = String::new();
-    let mut track_file_path = String::new();
+    let mut tracking_file = TrackingFile {
+        path: String::new(),
+        contents: String::new()
+    };
 
+    let mut home_dir = String::new();
     let mut tests_dir = String::new();
 
     if let Some(home_path) = home::home_dir() {
@@ -18,7 +21,7 @@ pub fn setup() -> Result<(String, String, String), String> {
             home_dir = home_path_str.to_string();
 
             let app_data_dir = format!("{home_dir}/.local/share/{APP_NAME}");
-            track_file_path = format!("{app_data_dir}/tracked");
+            tracking_file.path = format!("{app_data_dir}/tracked");
 
             // Create the application data directory if one doesn't already exist
             match fs::create_dir_all(&app_data_dir) {
@@ -27,7 +30,7 @@ pub fn setup() -> Result<(String, String, String), String> {
             };
 
             tests_dir = format!("{app_data_dir}/tests");
-            
+
             // Create dummy repositories and files for testing
             for n in 1..=3 {
                 let real_no_hidden = format!("{tests_dir}/repo{n}");
@@ -103,5 +106,5 @@ pub fn setup() -> Result<(String, String, String), String> {
         return Err(String::from("Could not find the home directory"));
     }
 
-    Ok((home_dir, track_file_path, tests_dir))
+    Ok((home_dir, tracking_file, tests_dir))
 }

@@ -10,6 +10,12 @@ use std::process::{self, Command, Stdio};
 pub const APP_NAME: &str = env!("CARGO_PKG_NAME");
 pub const SPINNER_TICK: u64 = 60;
 
+/// Represents the file storing entries of tracked repositories
+pub struct TrackingFile {
+    pub path: String,
+    pub contents: String
+}
+
 /// Checks if a given repository has an entry in the tracking file
 #[allow(clippy::must_use_candidate)]
 pub fn repo_is_tracked(repo: &str, track_file_contents: &str) -> bool {

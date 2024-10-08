@@ -10,11 +10,11 @@ use serial_test::serial;
 #[test]
 #[serial]
 fn case_add_real() {
-    let (_home_dir, track_file_path, tests_dir) = common::setup().unwrap();
+    let (_home_dir, tracking_file, tests_dir) = common::setup().unwrap();
 
     // Remove the tracking file if it already exists
-    if Path::new(track_file_path.as_str()).try_exists().unwrap() {
-        fs::remove_file(&track_file_path).unwrap();
+    if Path::new(tracking_file.path.as_str()).try_exists().unwrap() {
+        fs::remove_file(&tracking_file.path).unwrap();
     }
 
     // The function executes without errors
@@ -23,10 +23,10 @@ fn case_add_real() {
         repos.push(format!("{tests_dir}/repo{n}"));
         repos.push(format!("{tests_dir}/.hidden/repo{n}"));
     }
-    assert_eq!(add(repos, track_file_path.as_str(), ""), Ok(()));
+    assert_eq!(add(repos, &tracking_file), Ok(()));
 
     // Read the updated tracking file
-    let track_file_up = fs::read_to_string(track_file_path).unwrap();
+    let track_file_up = fs::read_to_string(tracking_file.path).unwrap();
 
     for n in 1..=3 {
         // The tracking file contains real repositories
@@ -41,7 +41,7 @@ fn case_add_real() {
 
 #[test]
 fn case_add_fake() {
-    let (_home_dir, track_file_path, tests_dir) = common::setup().unwrap();
+    let (_home_dir, tracking_file, tests_dir) = common::setup().unwrap();
 
     // The function throws an error
     let mut repos: Vec<String> = Vec::new();
@@ -49,12 +49,12 @@ fn case_add_fake() {
         repos.push(format!("{tests_dir}/fake_repo{n}"));
         repos.push(format!("{tests_dir}/.hidden/fake_repo{n}"));
     }
-    assert_eq!(add(repos, track_file_path.as_str(), ""), Err(String::from("Repositories validation failed")) );
+    assert_eq!(add(repos, &tracking_file), Err(String::from("Repositories validation failed")) );
 }
 
 #[test]
 fn case_add_regular_dirs() {
-    let (_home_dir, track_file_path, tests_dir) = common::setup().unwrap();
+    let (_home_dir, tracking_file, tests_dir) = common::setup().unwrap();
 
     // The function throws an error
     let mut repos: Vec<String> = Vec::new();
@@ -62,12 +62,12 @@ fn case_add_regular_dirs() {
         repos.push(format!("{tests_dir}/dir{n}"));
         repos.push(format!("{tests_dir}/.hidden/dir{n}"));
     }
-    assert_eq!(add(repos, track_file_path.as_str(), ""), Err(String::from("Repositories validation failed")) );
+    assert_eq!(add(repos, &tracking_file), Err(String::from("Repositories validation failed")) );
 }
 
 #[test]
 fn case_add_non_existent() {
-    let (_home_dir, track_file_path, _tests_dir) = common::setup().unwrap();
+    let (_home_dir, tracking_file, _tests_dir) = common::setup().unwrap();
 
     // The function throws an error
     let repos = vec![
@@ -75,17 +75,17 @@ fn case_add_non_existent() {
         format!("lvdslns"),
         format!("fjioadbaob")
     ];
-    assert_eq!(add(repos, track_file_path.as_str(), ""), Err(String::from("Repositories validation failed")) );
+    assert_eq!(add(repos, &tracking_file), Err(String::from("Repositories validation failed")) );
 }
 
 #[test]
 fn case_add_files() {
-    let (_home_dir, track_file_path, tests_dir) = common::setup().unwrap();
+    let (_home_dir, tracking_file, tests_dir) = common::setup().unwrap();
 
     // The function throws an error
     let mut repos: Vec<String> = Vec::new();
     for n in 1..=3 {
         repos.push(format!("{tests_dir}/file{n}"));
     }
-    assert_eq!(add(repos, track_file_path.as_str(), ""), Err(String::from("Repositories validation failed")) );
+    assert_eq!(add(repos, &tracking_file), Err(String::from("Repositories validation failed")) );
 }

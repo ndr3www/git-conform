@@ -9,6 +9,7 @@ use crate::core::back::{
 };
 use crate::utils::{
     APP_NAME,
+    TrackingFile,
     repo_is_tracked,
     repos_valid
 };
@@ -18,7 +19,7 @@ use std::io::Write as _;
 use std::path::Path;
 
 /// Scans only specified directories
-pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
+pub fn scan_dirs(mut dirs: Vec<String>, tracking_file: &TrackingFile, scan_hidden: bool) -> Result<(), String> {
     // Remove duplicates
     dirs.sort_unstable();
     dirs.dedup();
@@ -67,14 +68,14 @@ pub fn scan_dirs(mut dirs: Vec<String>, track_file_path: &str, track_file_conten
         return Err(String::from("Directories validation failed"));
     }
 
-    search_for_repos(dirs.as_slice(), track_file_path, track_file_contents, scan_hidden)?;
+    search_for_repos(dirs.as_slice(), tracking_file, scan_hidden)?;
 
     Ok(())
 }
 
 /// Scans all directories in user's /home
-pub fn scan_all(home_dir: String, track_file_path: &str, track_file_contents: &str, scan_hidden: bool) -> Result<(), String> {
-    search_for_repos(&[home_dir], track_file_path, track_file_contents, scan_hidden)?;
+pub fn scan_all(home_dir: String, tracking_file: &TrackingFile, scan_hidden: bool) -> Result<(), String> {
+    search_for_repos(&[home_dir], tracking_file, scan_hidden)?;
 
     Ok(())
 }
@@ -91,7 +92,7 @@ pub fn list(track_file_contents: &str) -> Result<(), String> {
 }
 
 /// Writes the paths of the specified repos to the tracking file
-pub fn add(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+pub fn add(mut repos: Vec<String>, tracking_file: &TrackingFile) -> Result<(), String> {
     // Remove duplicates
     repos.sort_unstable();
     repos.dedup();
@@ -102,13 +103,13 @@ pub fn add(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &
     let mut track_file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open(track_file_path)
-        .map_err(|e| format!("{track_file_path}: {e}"))?;
+        .open(tracking_file.path.clone())
+        .map_err(|e| format!("{}: {e}", tracking_file.path))?;
 
     for repo in repos {
         // Check if the tracking file already
         // contains the git repository path
-        if repo_is_tracked(repo.as_str(), track_file_contents) {
+        if repo_is_tracked(repo.as_str(), tracking_file.contents.as_str()) {
             println!("{APP_NAME}: '{repo}' is already being tracked");
             continue;
         }
@@ -116,15 +117,15 @@ pub fn add(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &
         // Add the path of the git repository to the tracking file
         track_file.write_all(
             format!("{repo}\n").as_bytes())
-            .map_err(|e| format!("{track_file_path}: {e}"))?;
+            .map_err(|e| format!("{}: {e}", tracking_file.path))?;
     }
 
     Ok(())
 }
 
 /// Removes only specified repositories from the tracking file
-pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
-    if track_file_contents.is_empty() {
+pub fn remove_repos(mut repos: Vec<String>, tracking_file: &TrackingFile) -> Result<(), String> {
+    if tracking_file.contents.is_empty() {
         return Err(String::from("No repository is being tracked"));
     }
 
@@ -137,7 +138,7 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
     // Repositories validation
     for repo in &repos {
         // Check if the tracking file contains the git repository
-        if !repo_is_tracked(repo.as_str(), track_file_contents) {
+        if !repo_is_tracked(repo.as_str(), tracking_file.contents.as_str()) {
             eprintln!("{APP_NAME}: '{repo}' is not being tracked");
             repos_ok = false;
         }
@@ -147,14 +148,14 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
         return Err(String::from("Repositories validation failed"));
     }
 
-    let mut track_file_lines: Vec<&str> = track_file_contents.lines().collect();
+    let mut track_file_lines: Vec<&str> = tracking_file.contents.lines().collect();
 
     // Open/create the tracking file for writing
     let mut track_file = OpenOptions::new()
         .write(true)
         .truncate(true)
-        .open(track_file_path)
-        .map_err(|e| format!("{track_file_path}: {e}"))?;
+        .open(tracking_file.path.clone())
+        .map_err(|e| format!("{}: {e}", tracking_file.path))?;
 
     for repo in repos {
         // Remove specified repositories from the vector
@@ -170,18 +171,18 @@ pub fn remove_repos(mut repos: Vec<String>, track_file_path: &str, track_file_co
 
     // Write the final changes to the tracking file
     track_file.write_all(track_file_lines.join("\n").as_bytes())
-        .map_err(|e| format!("{track_file_path}: {e}"))?;
+        .map_err(|e| format!("{}: {e}", tracking_file.path))?;
 
     Ok(())
 }
 
 /// Removes the tracking file
-pub fn remove_all(track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
-    if track_file_contents.is_empty() {
+pub fn remove_all(tracking_file: &TrackingFile) -> Result<(), String> {
+    if tracking_file.contents.is_empty() {
         return Err(String::from("No repository is being tracked"));
     }
 
-    fs::remove_file(track_file_path).map_err(|e| format!("{track_file_path}: {e}"))?;
+    fs::remove_file(tracking_file.path.clone()).map_err(|e| format!("{}: {e}", tracking_file.path))?;
 
     Ok(())
 }
@@ -202,14 +203,14 @@ pub async fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
 
 /// Asynchronously retrieves important details about each repo
 /// in the tracking file and prints them to the standard output
-pub async fn check_all(track_file_contents: &str) -> Result<(), String> {
-    if track_file_contents.is_empty() {
+pub async fn check_all(tracking_file: &TrackingFile) -> Result<(), String> {
+    if tracking_file.contents.is_empty() {
         return Err(String::from("No repository is being tracked"));
     }
 
     // Put all the tracking file entries in a Vec to
     // avoid lifetime constraints on async tasks
-    let track_file_lines: Vec<String> = track_file_contents
+    let track_file_lines: Vec<String> = tracking_file.contents
         .lines()
         .map(String::from)
         .collect();
