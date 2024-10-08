@@ -189,21 +189,21 @@ pub fn remove_all(tracking_file: &TrackingFile) -> Result<(), String> {
 
 /// Asynchronously retrieves important details about each repo
 /// in the repos Vec and prints them to the standard output
-pub async fn check_repos(mut repos: Vec<String>) -> Result<(), String> {
+pub async fn check_repos(mut repos: Vec<String>, flags: &[bool]) -> Result<(), String> {
     // Remove duplicates
     repos.sort_unstable();
     repos.dedup();
 
     repos = repos_valid(repos.as_slice())?;
 
-    exec_async_check(repos).await?;
+    exec_async_check(repos, flags.to_vec()).await?;
 
     Ok(())
 }
 
 /// Asynchronously retrieves important details about each repo
 /// in the tracking file and prints them to the standard output
-pub async fn check_all(tracking_file: &TrackingFile) -> Result<(), String> {
+pub async fn check_all(tracking_file: &TrackingFile, flags: &[bool]) -> Result<(), String> {
     if tracking_file.contents.is_empty() {
         return Err(String::from("No repository is being tracked"));
     }
@@ -215,7 +215,7 @@ pub async fn check_all(tracking_file: &TrackingFile) -> Result<(), String> {
         .map(String::from)
         .collect();
 
-    exec_async_check(track_file_lines).await?;
+    exec_async_check(track_file_lines, flags.to_vec()).await?;
 
     Ok(())
 }

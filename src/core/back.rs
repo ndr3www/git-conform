@@ -94,7 +94,7 @@ fn entry_is_hidden(entry: &DirEntry) -> bool {
 }
 
 // Core functionality of the `check` command
-pub async fn exec_async_check(repos: Vec<String>) -> Result<(), String> {
+pub async fn exec_async_check(repos: Vec<String>, flags: Vec<bool>) -> Result<(), String> {
     let final_output = Arc::new(Mutex::new(String::new()));
 
     // Handler for async spinners
@@ -105,13 +105,14 @@ pub async fn exec_async_check(repos: Vec<String>) -> Result<(), String> {
     for repo in repos {
         let multi_prog_clone = multi_prog.clone();
         let final_output_clone = Arc::clone(&final_output);
+        let flags_clone = flags.clone();
 
         tasks.push(tokio::spawn(async move {
             let spinner = multi_prog_clone.add(ProgressBar::new_spinner());
             spinner.set_message(repo.clone());
             spinner.enable_steady_tick(Duration::from_millis(SPINNER_TICK));
 
-            match inspect_repo(repo.as_str()) {
+            match inspect_repo(repo.as_str(), flags_clone.as_slice()) {
                 Ok(output) => {
                     spinner.finish_and_clear();
 
@@ -144,77 +145,87 @@ pub async fn exec_async_check(repos: Vec<String>) -> Result<(), String> {
 // difference in the number of commits between each branch
 // and the respective remote, returns a String with
 // the output of each operation
-fn inspect_repo(repo: &str) -> Result<String, String> {
-    let status_output = repo_status(repo)?;
-    let mut remotes_output = String::new();
+fn inspect_repo(repo: &str, flags: &[bool]) -> Result<String, String> {
+    // Define the function flags
+    let print_status = flags[0];
+    let print_remotes = flags[1];
+
+    let mut status_output = String::new();
+    if !print_remotes {
+        status_output = repo_status(repo)?;
+    }
+
     let mut final_output = String::new();
 
-    // Get the list of branches
-    let git_branch_out = Command::new("git")
-        .args(["-C", repo, "branch"])
-        .stderr(Stdio::null())
-        .output()
-        .map_err(|e| format!("git: {e}"))?
-        .stdout;
-    let git_branch_str = String::from_utf8_lossy(git_branch_out.as_slice());
-
-    // Leave if there are no branches in the repository
-    if git_branch_str.is_empty() {
-        return Ok(final_output)
-    }
-
-    // Format each entry in the branches string and put it in Vec
-    let branches: Vec<String> = git_branch_str
-        .lines()
-        .map(|mut s| {
-            s = s.trim();
-            s.replace("* ", "")
-        })
-        .collect();
-
-    // Get the list of remotes
-    let mut remotes: Vec<&str> = Vec::new();
-    let git_remote_out = Command::new("git")
-        .args(["-C", repo, "remote"])
-        .stderr(Stdio::null())
-        .output()
-        .map_err(|e| format!("git: {e}"))?
-        .stdout;
-    let git_remote_str = String::from_utf8_lossy(git_remote_out.as_slice());
-
-    // Populate the remotes Vec only if there are
-    // any remotes in the repository
-    if !git_remote_str.is_empty() {
-        remotes = git_remote_str.lines().collect();
-    }
-
-    // Fetch the latest data from remote repositories
-    for remote in &remotes {
-        let mut git_fetch = Command::new("git")
-            .args(["-C", repo, "fetch", remote])
-            .stdout(Stdio::null())
+    let mut remotes_output = String::new();
+    if !print_status {
+        // Get the list of branches
+        let git_branch_out = Command::new("git")
+            .args(["-C", repo, "branch"])
             .stderr(Stdio::null())
-            .spawn()
-            .map_err(|e| format!("git: {e}"))?;
+            .output()
+            .map_err(|e| format!("git: {e}"))?
+            .stdout;
+        let git_branch_str = String::from_utf8_lossy(git_branch_out.as_slice());
 
-        // Wait 10 seconds for fetching to finish, if it's still
-        // running after that time, kill the process
-        if git_fetch.wait_timeout(Duration::from_secs(10))
-            .map_err(|e| format!("git fetch: {e}"))?
-            .is_none() {
-            git_fetch.kill().map_err(|e| format!("git fetch: {e}"))?;
-            git_fetch.wait().map_err(|e| format!("git fetch: {e}"))?;
+        // Leave if there are no branches in the repository
+        if git_branch_str.is_empty() {
+            return Ok(final_output)
         }
-    }
 
-    // Inspect each branch
-    for branch in branches {
-        write!(
-            remotes_output,
-            "{}",
-            remotes_diff(repo, branch.as_str(), remotes.clone())?
-        )
-        .map_err(|e| e.to_string())?;
+        // Format each entry in the branches string and put it in Vec
+        let branches: Vec<String> = git_branch_str
+            .lines()
+            .map(|mut s| {
+                s = s.trim();
+                s.replace("* ", "")
+            })
+            .collect();
+
+        // Get the list of remotes
+        let mut remotes: Vec<&str> = Vec::new();
+        let git_remote_out = Command::new("git")
+            .args(["-C", repo, "remote"])
+            .stderr(Stdio::null())
+            .output()
+            .map_err(|e| format!("git: {e}"))?
+            .stdout;
+        let git_remote_str = String::from_utf8_lossy(git_remote_out.as_slice());
+
+        // Populate the remotes Vec only if there are
+        // any remotes in the repository
+        if !git_remote_str.is_empty() {
+            remotes = git_remote_str.lines().collect();
+        }
+
+        // Fetch the latest data from remote repositories
+        for remote in &remotes {
+            let mut git_fetch = Command::new("git")
+                .args(["-C", repo, "fetch", remote])
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+                .map_err(|e| format!("git: {e}"))?;
+
+            // Wait 10 seconds for fetching to finish, if it's still
+            // running after that time, kill the process
+            if git_fetch.wait_timeout(Duration::from_secs(10))
+                .map_err(|e| format!("git fetch: {e}"))?
+                .is_none() {
+                git_fetch.kill().map_err(|e| format!("git fetch: {e}"))?;
+                git_fetch.wait().map_err(|e| format!("git fetch: {e}"))?;
+            }
+        }
+
+        // Inspect each branch
+        for branch in branches {
+            write!(
+                remotes_output,
+                "{}",
+                remotes_diff(repo, branch.as_str(), remotes.clone())?
+            )
+            .map_err(|e| e.to_string())?;
+        }
     }
 
     // Assign the info to the final output only if there are any pending changes

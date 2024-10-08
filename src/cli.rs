@@ -59,6 +59,14 @@ pub enum Commands {
         /// Inspect all tracked repositories
         #[arg(short, long, group = "repositories")]
         #[arg(default_value_t = false)]
-        all: bool
+        all: bool,
+        /// Print only the output of `git status -s`
+        #[arg(short, long, group = "output")]
+        #[arg(default_value_t = false)]
+        status: bool,
+        /// Print only details about remote repositories
+        #[arg(short, long, group = "output")]
+        #[arg(default_value_t = false)]
+        remotes: bool
     }
 }

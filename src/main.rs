@@ -119,13 +119,13 @@ async fn main() {
                 handle_error(&e, 5);
             }
         },
-        Commands::Check { repos, all } => {
+        Commands::Check { repos, all, status, remotes } => {
             if *all {
-                if let Err(e) = check_all(&tracking_file).await {
+                if let Err(e) = check_all(&tracking_file, &[*status, *remotes]).await {
                     handle_error(&e, 6);
                 }
             }
-            else if let Err(e) = check_repos(repos.to_owned()).await {
+            else if let Err(e) = check_repos(repos.to_owned(), &[*status, *remotes]).await {
                 handle_error(&e, 6);
             }
         }
