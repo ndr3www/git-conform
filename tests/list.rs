@@ -1,4 +1,4 @@
-use git_conform::core::list;
+use git_conform::core::front::list;
 
 #[test]
 fn case_list_empty() {

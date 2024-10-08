@@ -1,6 +1,6 @@
 mod common;
 
-use git_conform::core::{check_repos, check_all};
+use git_conform::core::front::{check_repos, check_all};
 
 #[tokio::test]
 async fn case_check_repos_real() {

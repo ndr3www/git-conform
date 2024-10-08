@@ -1,6 +1,6 @@
 mod common;
 
-use git_conform::core::{remove_repos, remove_all};
+use git_conform::core::front::{remove_repos, remove_all};
 
 use std::fs::{self, File};
 use std::io::Write as _;
