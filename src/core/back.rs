@@ -54,7 +54,7 @@ pub fn search_for_repos(dirs: &[String], track_file_path: &str, track_file_conte
     Ok(())
 }
 
-// Core functionality of the search_for_repos function
+// Core functionality of the `search_for_repos` function
 fn search_core(entry: &DirEntry, mut track_file: &File, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
     // Check if the path contains .git directory
     if let Some(path) = entry.path().to_str() {
