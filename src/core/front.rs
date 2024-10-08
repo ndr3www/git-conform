@@ -1,4 +1,4 @@
-//! Frontend components of the core module, intended to use with some sort of a user interface
+//! Frontend components of the core module, intended to use with the command-line interface
 
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::missing_panics_doc)]
