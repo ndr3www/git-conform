@@ -12,6 +12,7 @@ use std::io::Write as _;
 use std::fmt::Write as _;
 use std::time::Duration;
 use std::process::{Command, Stdio};
+use std::sync::{Arc, Mutex};
 
 use walkdir::{WalkDir, DirEntry};
 use wait_timeout::ChildExt;
@@ -93,6 +94,8 @@ fn entry_is_hidden(entry: &DirEntry) -> bool {
 
 // Core functionality of the `check` command
 pub async fn exec_async_check(repos: Vec<String>) -> Result<(), String> {
+    let final_output = Arc::new(Mutex::new(String::new()));
+
     // Handler for async spinners
     let multi_prog = MultiProgress::new();
 
@@ -100,6 +103,7 @@ pub async fn exec_async_check(repos: Vec<String>) -> Result<(), String> {
     let mut tasks = Vec::new();
     for repo in repos {
         let multi_prog_clone = multi_prog.clone();
+        let final_output_clone = Arc::clone(&final_output);
 
         tasks.push(tokio::spawn(async move {
             let spinner = multi_prog_clone.add(ProgressBar::new_spinner());
@@ -108,11 +112,16 @@ pub async fn exec_async_check(repos: Vec<String>) -> Result<(), String> {
 
             match inspect_repo(repo.as_str()) {
                 Ok(output) => {
-                    if output.is_empty() {
-                        spinner.finish_and_clear();
-                    }
-                    else {
-                        spinner.finish_with_message(output);
+                    spinner.finish_and_clear();
+
+                    if !output.is_empty() {
+                        writeln!(
+                            final_output_clone
+                                .lock()
+                                .unwrap_or_else(|_| panic!("'{repo}' Mutex lock")),
+                            "{output}"
+                        )
+                        .unwrap_or_else(|_| panic!("'{repo}' output write"));
                     }
                 },
                 Err(e) => spinner.finish_with_message(format!("{APP_NAME}: {e}"))
@@ -124,6 +133,8 @@ pub async fn exec_async_check(repos: Vec<String>) -> Result<(), String> {
     for task in tasks {
         task.await.map_err(|e| e.to_string())?;
     }
+
+    print!("{}", final_output.lock().unwrap());
 
     Ok(())
 }
