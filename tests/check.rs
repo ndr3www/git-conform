@@ -13,7 +13,7 @@ async fn case_check_repos_real() {
         repos.push(format!("{tests_dir}/repo{n}"));
         repos.push(format!("{tests_dir}/.hidden/repo{n}"));
     }
-    assert_eq!(check_repos(repos).await, Ok(()));
+    assert_eq!(check_repos(repos, &[true, true]).await, Ok(()));
 }
 
 #[tokio::test]
@@ -26,7 +26,7 @@ async fn case_check_repos_fake() {
         repos.push(format!("{tests_dir}/fake_repo{n}"));
         repos.push(format!("{tests_dir}/.hidden/fake_repo{n}"));
     }
-    assert_eq!(check_repos(repos).await, Err(String::from("Repositories validation failed")));
+    assert_eq!(check_repos(repos, &[true, true]).await, Err(String::from("Repositories validation failed")));
 }
 
 #[tokio::test]
@@ -39,7 +39,7 @@ async fn case_check_repos_regular_dirs() {
         repos.push(format!("{tests_dir}/dir{n}"));
         repos.push(format!("{tests_dir}/.hidden/dir{n}"));
     }
-    assert_eq!(check_repos(repos).await, Err(String::from("Repositories validation failed")));
+    assert_eq!(check_repos(repos, &[true, true]).await, Err(String::from("Repositories validation failed")));
 }
 
 #[tokio::test]
@@ -52,7 +52,7 @@ async fn case_check_repos_non_existent() {
         format!("lvdslns"),
         format!("fjioadbaob")
     ];
-    assert_eq!(check_repos(repos).await, Err(String::from("Repositories validation failed")));
+    assert_eq!(check_repos(repos, &[true, true]).await, Err(String::from("Repositories validation failed")));
 }
 
 #[tokio::test]
@@ -64,7 +64,7 @@ async fn case_check_repos_files() {
     for n in 1..=3 {
         repos.push(format!("{tests_dir}/file{n}"));
     }
-    assert_eq!(check_repos(repos).await, Err(String::from("Repositories validation failed")));
+    assert_eq!(check_repos(repos, &[true, true]).await, Err(String::from("Repositories validation failed")));
 }
 
 #[tokio::test]
@@ -74,7 +74,7 @@ async fn case_check_all() {
     tracking_file.contents = format!("{tests_dir}/repo1\n{tests_dir}/repo2\n{tests_dir}/repo3");
 
     // The function executes without errors
-    assert_eq!(check_all(&tracking_file).await, Ok(()));
+    assert_eq!(check_all(&tracking_file, &[true, true]).await, Ok(()));
 }
 
 #[tokio::test]
@@ -85,5 +85,5 @@ async fn case_check_all_empty_tracking_file() {
     };
 
     // The function throws an error
-    assert_eq!(check_all(&tracking_file).await, Err(String::from("No repository is being tracked")));
+    assert_eq!(check_all(&tracking_file, &[true, true]).await, Err(String::from("No repository is being tracked")));
 }
