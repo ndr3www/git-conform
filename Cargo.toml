@@ -3,11 +3,11 @@ name = "git-conform"
 version = "0.1.0"
 edition = "2021"
 description = "Keep track of your local git repositories"
-repository = ""
+repository = "https://github.com/ndr3www/git-conform"
 license = "MIT"
 readme = "README.md"
-keywords = []
-categories = []
+keywords = ["git", "tracker", "cli"]
+categories = ["command-line-utilities", "development-tools", "visualization"]
 
 [dependencies]
 tokio = { version = "1.40.0", features = ["full"] }
