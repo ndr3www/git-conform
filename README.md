@@ -1,3 +1,10 @@
+<p align="left">
+  <a href="https://crates.io/crates/git-conform">
+    <img alt="Crates.io Version" src="https://img.shields.io/crates/v/git-conform" />
+    <img alt="Crates.io Downloads" src=https://img.shields.io/crates/d/git-conform />
+  </a>
+</p>
+
 ## 📖 About
 `git-conform` is a simple git extension that helps you to keep track of the repositories on your local machine and their remote counterparts.
 It works by scanning your **home directory** (or just the ones you specified) in search for git repositories, and then storing their paths in
