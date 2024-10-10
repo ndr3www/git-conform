@@ -22,7 +22,7 @@ the tracking file located at `~/.local/share/git-conform`.
 ### Through cargo
 `cargo install git-conform`
 
-### Through shell script
+### Using the setup shell script
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/ndr3www/git-conform/main/setup.sh)
 ```
