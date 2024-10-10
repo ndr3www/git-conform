@@ -1,0 +1,44 @@
+#!/bin/bash
+
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+printcl() {
+    local color=$1
+    local message=$2
+    echo -e "${color}${message}${NC}"
+}
+
+install_git_conform() {
+    printcl "${YELLOW}" "Installing The CLI into /usr/bin..."
+    sudo curl -L https://github.com/ndr3www/git-conform/releases/download/v0.1.0/git-conform -o /usr/bin/git-conform
+    sudo chmod +x /usr/bin/git-conform
+    printcl "${GREEN}" "Installed Successfully! Run the CLI with the command: git-conform --help"
+}
+
+uninstall_git_conform() {
+    printcl "${YELLOW}" "Uninstalling The CLI from /usr/bin..."
+    sudo rm /usr/bin/git-conform
+    printcl "${GREEN}" "Uninstalled Successfully!"
+}
+
+printcl "${YELLOW}" "Choose an action:"
+printcl "${YELLOW}" "1: Install"
+printcl "${YELLOW}" "2: Uninstall"
+read -r -p "Enter your choice: " choice
+
+case "$choice" in
+    1)
+        install_git_conform
+        ;;
+    2)
+        uninstall_git_conform
+        ;;
+    *)
+        printcl "${YELLOW}" "Invalid choice. Please choose 1 to install or 2 to uninstall."
+        exit 1
+        ;;
+esac
+
+exit 0
