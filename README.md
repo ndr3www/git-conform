@@ -22,6 +22,10 @@ the tracking file located at `~/.local/share/git-conform`.
 ### Through cargo
 `cargo install git-conform`
 
+### Through shell script
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/ndr3www/git-conform/main/install)
+```
 ### Manually
 Download the executable from [latest release](https://github.com/ndr3www/git-conform/releases/latest) and copy it to a directory specified in your `$PATH`, for example:
 
