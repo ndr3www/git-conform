@@ -26,10 +26,6 @@ the tracking file located at `~/.local/share/git-conform`.
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/ndr3www/git-conform/main/setup.sh)
 ```
-### Manually
-Download the executable from [latest release](https://github.com/ndr3www/git-conform/releases/latest) and copy it to a directory specified in your `$PATH`, for example:
-
-`sudo cp git-conform /usr/bin`
 
 ## 📋 List of available commands
 - `git conform scan` - searches for untracked repositories and automatically adds them for tracking
