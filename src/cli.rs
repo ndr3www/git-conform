@@ -64,7 +64,7 @@ pub enum Commands {
         #[arg(short, long, group = "output")]
         #[arg(default_value_t = false)]
         status: bool,
-        /// Print only details about remote repositories
+        /// Print only the ahead/behind commit metrics
         #[arg(short, long, group = "output")]
         #[arg(default_value_t = false)]
         remotes: bool
