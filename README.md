@@ -23,6 +23,8 @@ the tracking file located at `~/.local/share/git-conform`.
 `cargo install git-conform`
 
 ### Using the setup shell script
+> [!IMPORTANT]  
+> Before continuing, make sure you have `wget` and `curl` installed on your system
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/ndr3www/git-conform/main/setup.sh)
 ```
