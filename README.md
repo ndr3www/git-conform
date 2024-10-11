@@ -35,4 +35,4 @@ bash <(curl -sSL https://raw.githubusercontent.com/ndr3www/git-conform/main/setu
 - `git conform rm` - removes repositories from tracking
 - `git conform check` - prints the following details about each repository: output of `git status -s` and ahead/behind commit metrics between local and remote branches
 
-**Type `git conform --help`, `git conform -h` or `git conform help` to get more details**
+Type `git conform --help`, `git conform -h` or `git conform help` to get more details. Also, you can get more comprehensive info about specific subcommand like this: `git conform help <subcommand>`.
