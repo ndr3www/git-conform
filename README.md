@@ -14,7 +14,6 @@ the tracking file located at `~/.local/share/git-conform`.
 - Effortlessly integrates with the git ecosystem ↔️
 - Single self-contained executable 🗄️
 - Blazingly fast ⚡
-- Highly memory-efficient ♻️
 - Straightforward design ✅
 
 ## 💿 Installation
