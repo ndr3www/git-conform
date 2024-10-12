@@ -1,6 +1,6 @@
 mod common;
 
-use git_conform::core::front::{scan_dirs, scan_all};
+use git_conform::core::api::{scan_dirs, scan_all};
 
 use std::fs;
 use std::path::Path;

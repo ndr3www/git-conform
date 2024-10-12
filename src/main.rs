@@ -2,7 +2,7 @@ mod core;
 mod utils;
 mod cli;
 
-use crate::core::front::{
+use crate::core::api::{
     scan_dirs,
     scan_all,
     list,

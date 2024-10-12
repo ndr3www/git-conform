@@ -1,6 +1,6 @@
 mod common;
 
-use git_conform::core::front::{check_repos, check_all};
+use git_conform::core::api::{check_repos, check_all};
 use git_conform::utils::TrackingFile;
 
 #[tokio::test]

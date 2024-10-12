@@ -1,4 +1,4 @@
 //! Key functionality of the application
 
-pub mod front;
-mod back;
+pub mod api;
+mod backend;

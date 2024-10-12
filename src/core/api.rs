@@ -1,9 +1,9 @@
-//! Frontend components of the core module, intended to use with the command-line interface
+//! Public interface of the core module
 
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::missing_panics_doc)]
 
-use crate::core::back::{
+use crate::core::backend::{
     search_for_repos,
     exec_async_check
 };

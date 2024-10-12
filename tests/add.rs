@@ -1,6 +1,6 @@
 mod common;
 
-use git_conform::core::front::add;
+use git_conform::core::api::add;
 
 use std::fs;
 use std::path::Path;
