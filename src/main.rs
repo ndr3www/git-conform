@@ -141,6 +141,6 @@ async fn main() {
             if let Err(e) = enable_cd() {
                 eprintln!("Error enabling CD functionality: {}", e);
             }
-        }
+        },
     };
 }

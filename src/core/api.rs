@@ -242,14 +242,24 @@ pub fn enable_cd() -> Result<(), String> {
         (
             format!("{}/.{}rc", home_dir, shell.split('/').last().unwrap()),
             r#"
-gitconform_cd() {
+alias gls='git conform ls'
+alias gcd='git_conform_cd'
+
+git_conform_cd() {
+    if [ -z "$1" ]; then
+        echo "Usage: git_conform_cd <repository-name>"
+        return 1
+    fi
+    
     local repo_path
     repo_path=$(git-conform cd "$1")
-    if [ $? -eq 0 ]; then
-        cd "$repo_path" || return
-    else
-        echo "$repo_path"  # This will print the error message
+    
+    if [ $? -ne 0 ]; then
+        echo "$repo_path"  # This will be the error message
+        return 1
     fi
+    
+    cd "$repo_path" || return 1
 }
 "#
         )
