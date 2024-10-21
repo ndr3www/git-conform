@@ -238,15 +238,20 @@ pub fn enable_cd() -> Result<(), String> {
     let home_dir = env::var("HOME").map_err(|_| "Failed to get home directory")?;
     let shell = env::var("SHELL").map_err(|_| "Failed to get current shell")?;
 
-    let (config_file, alias_content) = if shell.ends_with("bash") {
+    let (config_file, function_content) = if shell.ends_with("bash") || shell.ends_with("zsh") {
         (
-            format!("{}/.bashrc", home_dir),
-            "\ngitconform_cd() {\n    cd \"$(git-conform cd \"$1\")\" || return\n}\n"
-        )
-    } else if shell.ends_with("zsh") {
-        (
-            format!("{}/.zshrc", home_dir),
-            "\ngitconform_cd() {\n    cd \"$(git-conform cd \"$1\")\" || return\n}\n"
+            format!("{}/.{}rc", home_dir, shell.split('/').last().unwrap()),
+            r#"
+gitconform_cd() {
+    local repo_path
+    repo_path=$(git-conform cd "$1")
+    if [ $? -eq 0 ]; then
+        cd "$repo_path" || return
+    else
+        echo "$repo_path"  # This will print the error message
+    fi
+}
+"#
         )
     } else {
         return Err(format!("Unsupported shell: {}", shell));
@@ -255,7 +260,7 @@ pub fn enable_cd() -> Result<(), String> {
     fs::OpenOptions::new()
         .append(true)
         .open(&config_file)
-        .and_then(|mut file| file.write_all(alias_content.as_bytes()))
+        .and_then(|mut file| file.write_all(function_content.as_bytes()))
         .map_err(|e| format!("Failed to update shell config: {}", e))?;
 
     println!("CD functionality enabled. Please restart your shell or run 'source {}' to apply changes.", config_file);

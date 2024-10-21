@@ -139,7 +139,7 @@ async fn main() {
         },
         Commands::EnableCd => {
             if let Err(e) = enable_cd() {
-                handle_error(&e, 8);
+                eprintln!("Error enabling CD functionality: {}", e);
             }
         }
     };
