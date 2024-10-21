@@ -7,6 +7,8 @@ use crate::core::api::{
     scan_all,
     list,
     add,
+    cd_to_repo,
+    enable_cd,
     remove_repos,
     remove_all,
     check_repos,
@@ -127,6 +129,16 @@ async fn main() {
             }
             else if let Err(e) = check_repos(repos.to_owned(), &[*status, *remotes]).await {
                 handle_error(&e, 6);
+            }
+        },
+        Commands::Cd { repo_name } => {
+            if let Err(e) = cd_to_repo(&repo_name, &tracking_file) {
+                handle_error(&e, 7);
+            }
+        },
+        Commands::EnableCd => {
+            if let Err(e) = enable_cd() {
+                handle_error(&e, 8);
             }
         }
     };

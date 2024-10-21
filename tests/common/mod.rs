@@ -108,3 +108,9 @@ pub fn setup() -> Result<(String, TrackingFile, String), String> {
 
     Ok((home_dir, tracking_file, tests_dir))
 }
+
+pub fn cleanup(tests_dir: &str) -> Result<(), String> {
+    fs::remove_dir_all(tests_dir)
+        .map_err(|e| format!("Failed to remove test directory: {}", e))?;
+    Ok(())
+}
