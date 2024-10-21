@@ -132,8 +132,9 @@ async fn main() {
             }
         },
         Commands::Cd { repo_name } => {
-            if let Err(e) = cd_to_repo(&repo_name, &tracking_file) {
-                handle_error(&e, 7);
+            match cd_to_repo(&repo_name, &tracking_file) {
+                Ok(path) => println!("{}", path),
+                Err(e) => eprintln!("Error: {}", e),
             }
         },
         Commands::EnableCd => {

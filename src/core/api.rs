@@ -222,22 +222,15 @@ pub async fn check_all(tracking_file: &TrackingFile, flags: &[bool]) -> Result<(
     Ok(())
 }
 
-/// Changes the current directory to the specified repository's path
-pub fn cd_to_repo(repo_name: &str, tracking_file: &TrackingFile) -> Result<(), String> {
+pub fn cd_to_repo(repo_name: &str, tracking_file: &TrackingFile) -> Result<String, String> {
     if tracking_file.contents.is_empty() {
         return Err(String::from("No repository is being tracked"));
     }
 
-    let repo_path = tracking_file.contents
+    tracking_file.contents
         .lines()
         .find(|line| Path::new(line).file_name().and_then(|name| name.to_str()) == Some(repo_name))
-        .ok_or_else(|| format!("Repository '{}' not found in tracking file", repo_name))?;
-
-    env::set_current_dir(repo_path)
-        .map_err(|e| format!("Failed to change directory to '{}': {}", repo_path, e))?;
-
-    println!("Changed directory to: {}", repo_path);
-    Ok(())
+        .ok_or_else(|| format!("Repository '{}' not found in tracking file", repo_name))
 }
 
 /// Enables the CD functionality by adding an alias or function to the user's shell configuration
@@ -248,36 +241,22 @@ pub fn enable_cd() -> Result<(), String> {
     let (config_file, alias_content) = if shell.ends_with("bash") {
         (
             format!("{}/.bashrc", home_dir),
-            "\ngitconform() {\n    if [[ $1 == \"cd\" ]]; then\n        cd \"$(/path/to/git-conform cd \"${@:2}\")\" || return\n    else\n        /path/to/git-conform \"$@\"\n    fi\n}\n"
+            "\ngitconform_cd() {\n    cd \"$(git-conform cd \"$1\")\" || return\n}\n"
         )
     } else if shell.ends_with("zsh") {
         (
             format!("{}/.zshrc", home_dir),
-            "\ngitconform() {\n    if [[ $1 == \"cd\" ]]; then\n        cd \"$(/path/to/git-conform cd \"${@:2}\")\" || return\n    else\n        /path/to/git-conform \"$@\"\n    fi\n}\n"
+            "\ngitconform_cd() {\n    cd \"$(git-conform cd \"$1\")\" || return\n}\n"
         )
     } else {
         return Err(format!("Unsupported shell: {}", shell));
     };
 
-    // Check if the alias already exists
-    let mut file_content = String::new();
-    File::open(&config_file)
-        .and_then(|mut file| file.read_to_string(&mut file_content))
-        .map_err(|e| format!("Failed to read shell config file: {}", e))?;
-
-    if file_content.contains("gitconform()") {
-        println!("CD functionality is already enabled.");
-        return Ok(());
-    }
-
-    // Append the alias to the shell configuration file
-    let mut file = OpenOptions::new()
+    fs::OpenOptions::new()
         .append(true)
         .open(&config_file)
-        .map_err(|e| format!("Failed to open shell config file: {}", e))?;
-
-    file.write_all(alias_content.as_bytes())
-        .map_err(|e| format!("Failed to write to shell config file: {}", e))?;
+        .and_then(|mut file| file.write_all(alias_content.as_bytes()))
+        .map_err(|e| format!("Failed to update shell config: {}", e))?;
 
     println!("CD functionality enabled. Please restart your shell or run 'source {}' to apply changes.", config_file);
     Ok(())
