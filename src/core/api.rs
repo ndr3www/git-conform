@@ -14,9 +14,8 @@ use crate::utils::{
     repos_valid
 };
 
-use std::fs::{self, OpenOptions, File};
+use std::fs::{self, OpenOptions};
 use std::io::Write as _;
-use std::io::Read;
 use std::path::Path;
 use std::env;
 
@@ -230,6 +229,7 @@ pub fn cd_to_repo(repo_name: &str, tracking_file: &TrackingFile) -> Result<Strin
     tracking_file.contents
         .lines()
         .find(|line| Path::new(line).file_name().and_then(|name| name.to_str()) == Some(repo_name))
+        .map(String::from)
         .ok_or_else(|| format!("Repository '{}' not found in tracking file", repo_name))
 }
 
