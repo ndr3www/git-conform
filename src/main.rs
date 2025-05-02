@@ -89,13 +89,13 @@ async fn main() {
 
     // Handle command-line interactions
     match Cli::parse().get_command() {
-        Commands::Scan { dirs, all, no_hidden} => {
+        Commands::Scan { dirs, all, hidden} => {
             if *all {
-                if let Err(e) = scan_all(home_dir, &tracking_file, !no_hidden) {
+                if let Err(e) = scan_all(home_dir, &tracking_file, *hidden) {
                     handle_error(&e, 2);
                 }
             }
-            else if let Err(e) = scan_dirs(dirs.to_owned(), &tracking_file, !no_hidden) {
+            else if let Err(e) = scan_dirs(dirs.to_owned(), &tracking_file, *hidden) {
                 handle_error(&e, 2);
             }
         },

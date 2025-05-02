@@ -31,10 +31,10 @@ pub enum Commands {
         #[arg(short, long, group = "directories")]
         #[arg(default_value_t = false)]
         all: bool,
-        /// Don't scan hidden directories
+        /// Allow scanning hidden directories
         #[arg(long)]
         #[arg(default_value_t = false)]
-        no_hidden: bool
+        hidden: bool
     },
     /// Print the list of tracked repositories
     List,
