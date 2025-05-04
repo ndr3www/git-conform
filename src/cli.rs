@@ -68,5 +68,13 @@ pub enum Commands {
         #[arg(short, long, group = "output")]
         #[arg(default_value_t = false)]
         remotes: bool
-    }
+    },
+    /// Change directory to a tracked repository
+    Cd {
+        /// Name of the repository to change to
+        #[arg(required = true)]
+        repo_name: String,
+    },
+    /// Enable CD functionality by adding an alias to your shell configuration
+    EnableCd
 }

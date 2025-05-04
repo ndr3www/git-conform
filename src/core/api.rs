@@ -17,6 +17,7 @@ use crate::utils::{
 use std::fs::{self, OpenOptions};
 use std::io::Write as _;
 use std::path::Path;
+use std::env;
 
 /// Scans only specified directories
 pub fn scan_dirs(mut dirs: Vec<String>, tracking_file: &TrackingFile, scan_hidden: bool) -> Result<(), String> {
@@ -217,5 +218,61 @@ pub async fn check_all(tracking_file: &TrackingFile, flags: &[bool]) -> Result<(
 
     exec_async_check(track_file_lines, flags.to_vec()).await?;
 
+    Ok(())
+}
+
+pub fn cd_to_repo(repo_name: &str, tracking_file: &TrackingFile) -> Result<String, String> {
+    if tracking_file.contents.is_empty() {
+        return Err(String::from("No repository is being tracked"));
+    }
+
+    tracking_file.contents
+        .lines()
+        .find(|line| Path::new(line).file_name().and_then(|name| name.to_str()) == Some(repo_name))
+        .map(String::from)
+        .ok_or_else(|| format!("Repository '{}' not found in tracking file", repo_name))
+}
+
+/// Enables the CD functionality by adding an alias or function to the user's shell configuration
+pub fn enable_cd() -> Result<(), String> {
+    let home_dir = env::var("HOME").map_err(|_| "Failed to get home directory")?;
+    let shell = env::var("SHELL").map_err(|_| "Failed to get current shell")?;
+
+    let (config_file, function_content) = if shell.ends_with("bash") || shell.ends_with("zsh") {
+        (
+            format!("{}/.{}rc", home_dir, shell.split('/').last().unwrap()),
+            r#"
+alias gls='git conform ls'
+alias gcd='git_conform_cd'
+
+git_conform_cd() {
+    if [ -z "$1" ]; then
+        echo "Usage: git_conform_cd <repository-name>"
+        return 1
+    fi
+    
+    local repo_path
+    repo_path=$(git-conform cd "$1")
+    
+    if [ $? -ne 0 ]; then
+        echo "$repo_path"  # This will be the error message
+        return 1
+    fi
+    
+    cd "$repo_path" || return 1
+}
+"#
+        )
+    } else {
+        return Err(format!("Unsupported shell: {}", shell));
+    };
+
+    fs::OpenOptions::new()
+        .append(true)
+        .open(&config_file)
+        .and_then(|mut file| file.write_all(function_content.as_bytes()))
+        .map_err(|e| format!("Failed to update shell config: {}", e))?;
+
+    println!("CD functionality enabled. Please restart your shell or run 'source {}' to apply changes.", config_file);
     Ok(())
 }
