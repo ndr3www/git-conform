@@ -90,33 +90,26 @@ async fn main() {
     // Handle command-line interactions
     match Cli::parse().get_command() {
         Commands::Scan { dirs, all, hidden} => {
+            let result: Result<String, String>;
+
             if *all {
-                match scan_all(home_dir, &tracking_file, *hidden) {
-                    Ok(s) => {
-                        if s.is_empty() {
-                            println!("{APP_NAME}: No untracked repositories found");
-                        }
-                        else {
-                            println!("{APP_NAME}: Found untracked repositories:\n");
-                            print!("{s}");
-                        }
-                    },
-                    Err(e) => handle_error(&e, 2)
-                }
+                result = scan_all(home_dir, &tracking_file, *hidden);
             }
             else {
-                match scan_dirs(dirs.to_owned(), &tracking_file, *hidden) {
-                    Ok(s) => {
-                        if s.is_empty() {
-                            println!("{APP_NAME}: No untracked repositories found");
-                        }
-                        else {
-                            println!("{APP_NAME}: Found untracked repositories:\n");
-                            print!("{s}");
-                        }
-                    },
-                    Err(e) => handle_error(&e, 2)
-                }
+                result = scan_dirs(dirs.to_owned(), &tracking_file, *hidden);
+            }
+
+            match result {
+                Ok(s) => {
+                    if s.is_empty() {
+                        println!("{APP_NAME}: No untracked repositories found");
+                    }
+                    else {
+                        println!("{APP_NAME}: Found untracked repositories:\n");
+                        print!("{s}");
+                    }
+                },
+                Err(e) => handle_error(&e, 2)
             }
         },
         Commands::List => {
