@@ -18,7 +18,7 @@ fn case_scan_dirs_hidden() {
     }
 
     // The function executes without errors
-    assert_eq!(scan_dirs(vec![tests_dir.to_string()], &tracking_file, true), Ok(()));
+    assert!(scan_dirs(vec![tests_dir.to_string()], &tracking_file, true).is_ok());
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(tracking_file.path).unwrap();
@@ -61,7 +61,7 @@ fn case_scan_dirs_no_hidden() {
     }
 
     // The function executes without errors
-    assert_eq!(scan_dirs(vec![tests_dir.to_string()], &tracking_file, false), Ok(()));
+    assert!(scan_dirs(vec![tests_dir.to_string()], &tracking_file, false).is_ok());
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(tracking_file.path).unwrap();
@@ -132,7 +132,7 @@ fn case_scan_all() {
     }
 
     // The function executes without errors
-    assert_eq!(scan_all(home_dir, &tracking_file, true), Ok(()));
+    assert!(scan_all(home_dir, &tracking_file, true).is_ok());
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(tracking_file.path).unwrap();
