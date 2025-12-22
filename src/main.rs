@@ -89,7 +89,7 @@ async fn main() {
 
     // Handle command-line interactions
     match Cli::parse().get_command() {
-        Commands::Scan { dirs, all, hidden} => {
+        Commands::Scan { dirs, all, hidden, quiet} => {
             let result: Result<String, String>;
 
             if *all {
@@ -101,12 +101,14 @@ async fn main() {
 
             match result {
                 Ok(repos) => {
-                    if repos.is_empty() {
-                        println!("{APP_NAME}: No untracked repositories found");
-                    }
-                    else {
-                        println!("{APP_NAME}: Found untracked repositories:\n");
-                        print!("{repos}");
+                    if !*quiet {
+                        if repos.is_empty() {
+                            println!("{APP_NAME}: No untracked repositories found");
+                        }
+                        else {
+                            println!("{APP_NAME}: Found untracked repositories:\n");
+                            print!("{repos}");
+                        }
                     }
                 },
                 Err(e) => handle_error(&e, 2)
