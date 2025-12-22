@@ -100,13 +100,13 @@ async fn main() {
             }
 
             match result {
-                Ok(s) => {
-                    if s.is_empty() {
+                Ok(repos) => {
+                    if repos.is_empty() {
                         println!("{APP_NAME}: No untracked repositories found");
                     }
                     else {
                         println!("{APP_NAME}: Found untracked repositories:\n");
-                        print!("{s}");
+                        print!("{repos}");
                     }
                 },
                 Err(e) => handle_error(&e, 2)
