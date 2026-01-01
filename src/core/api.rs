@@ -19,7 +19,7 @@ use std::io::Write as _;
 use std::path::Path;
 
 /// Scans only specified directories
-pub fn scan_dirs(mut dirs: Vec<String>, tracking_file: &TrackingFile, scan_hidden: bool) -> Result<(), String> {
+pub fn scan_dirs(mut dirs: Vec<String>, tracking_file: &TrackingFile, scan_hidden: bool) -> Result<String, String> {
     // Remove duplicates
     dirs.sort_unstable();
     dirs.dedup();
@@ -68,16 +68,12 @@ pub fn scan_dirs(mut dirs: Vec<String>, tracking_file: &TrackingFile, scan_hidde
         return Err(String::from("Directories validation failed"));
     }
 
-    search_for_repos(dirs.as_slice(), tracking_file, scan_hidden)?;
-
-    Ok(())
+    Ok(search_for_repos(dirs.as_slice(), tracking_file, scan_hidden)?)
 }
 
 /// Scans all directories in user's /home
-pub fn scan_all(home_dir: String, tracking_file: &TrackingFile, scan_hidden: bool) -> Result<(), String> {
-    search_for_repos(&[home_dir], tracking_file, scan_hidden)?;
-
-    Ok(())
+pub fn scan_all(home_dir: String, tracking_file: &TrackingFile, scan_hidden: bool) -> Result<String, String> {
+    Ok(search_for_repos(&[home_dir], tracking_file, scan_hidden)?)
 }
 
 /// Prints the paths of all tracked git repositories to the standard output

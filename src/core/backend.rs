@@ -21,7 +21,9 @@ use indicatif::{MultiProgress, ProgressBar};
 
 // Searches recursively in dirs for untracked git repositories and automatically adds them to the tracking file
 #[allow(clippy::redundant_closure_for_method_calls)]
-pub fn search_for_repos(dirs: &[String], tracking_file: &TrackingFile, scan_hidden: bool) -> Result<(), String> {
+pub fn search_for_repos(dirs: &[String], tracking_file: &TrackingFile, scan_hidden: bool) -> Result<String, String> {
+    let mut repos = String::new();
+
     // Open/create the tracking file for writing
     let track_file = OpenOptions::new()
         .create(true)
@@ -36,7 +38,10 @@ pub fn search_for_repos(dirs: &[String], tracking_file: &TrackingFile, scan_hidd
                 .same_file_system(true)
                 .into_iter()
                 .filter_map(|n| n.ok()) {
-                    search_core(&entry, &track_file, tracking_file.path.as_str(), tracking_file.contents.as_str())?;
+                    match search_core(&entry, &track_file, tracking_file.path.as_str(), tracking_file.contents.as_str()) {
+                        Ok(s) => repos.push_str(&s),
+                        Err(e) => return Err(e)
+                    }
             }
         }
     }
@@ -48,23 +53,28 @@ pub fn search_for_repos(dirs: &[String], tracking_file: &TrackingFile, scan_hidd
                 .into_iter()
                 .filter_entry(|n| !entry_is_hidden(n))
                 .filter_map(|n| n.ok()) {
-                    search_core(&entry, &track_file, tracking_file.path.as_str(), tracking_file.contents.as_str())?;
+                    match search_core(&entry, &track_file, tracking_file.path.as_str(), tracking_file.contents.as_str()) {
+                        Ok(s) => repos.push_str(&s),
+                        Err(e) => return Err(e)
+                    }
             }
         }
     }
 
-    Ok(())
+    Ok(repos)
 }
 
 // Core functionality of the `search_for_repos` function
-fn search_core(entry: &DirEntry, mut track_file: &File, track_file_path: &str, track_file_contents: &str) -> Result<(), String> {
+fn search_core(entry: &DirEntry, mut track_file: &File, track_file_path: &str, track_file_contents: &str) -> Result<String, String> {
+    let mut repo = String::new();
+
     // Check if the path contains .git directory
     if let Some(path) = entry.path().to_str() {
         if let Some(repo_path) = path.strip_suffix("/.git") {
             // Check if the tracking file already
             // contains the git repository path
             if repo_is_tracked(repo_path, track_file_contents) {
-                return Ok(())
+                return Ok(repo)
             }
 
             // Check if the path is in fact a git repository
@@ -75,6 +85,8 @@ fn search_core(entry: &DirEntry, mut track_file: &File, track_file_path: &str, t
                         track_file.write_all(
                             format!("{repo_path}\n").as_bytes())
                             .map_err(|e| format!("{track_file_path}: {e}"))?;
+                        
+                        repo = format!("{repo_path}\n");
                     }
                 },
                 Err(e) => return Err(e)
@@ -82,7 +94,7 @@ fn search_core(entry: &DirEntry, mut track_file: &File, track_file_path: &str, t
         }
     }
 
-    Ok(())
+    Ok(repo)
 }
 
 // Checks if a given entry is a hidden directory
