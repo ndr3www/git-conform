@@ -5,18 +5,12 @@
   </a>
 </p>
 
-## 📖 About
+## About
 `git-conform` is a simple git extension that helps you to keep track of the repositories on your local machine and their remote counterparts.
 It works by scanning your **home directory** (or just the ones you specified) in search for git repositories, and then storing their paths in
-the tracking file located at `~/.local/share/git-conform`.
+the tracking file located at `~/.local/share/git-conform`. By typing `git conform check --all` you can see uncommitted changes and unsynced commits between local and remote branches from all the repositories on your machine at once.
 
-## ✨ Features
-- Effortlessly integrates with the git ecosystem ↔️
-- Single self-contained executable 🗄️
-- Blazingly fast ⚡
-- Straightforward design ✅
-
-## 💿 Installation
+## Installation
 
 ### Through cargo
 `cargo install git-conform`
@@ -28,11 +22,21 @@ the tracking file located at `~/.local/share/git-conform`.
 bash <(curl -sSL https://raw.githubusercontent.com/ndr3www/git-conform/main/setup.sh)
 ```
 
-## 📋 List of available commands
+## Available commands and options
 - `git conform scan` - searches for untracked repositories and automatically adds them for tracking
+  - `-a, --all` - scan all directories in your /home
+  - `--hidden` - allow scanning hidden directories
+<br></br>
 - `git conform list` - prints the list of tracked repositories
-- `git conform add` - adds repositories for tracking
-- `git conform rm` - removes repositories from tracking
-- `git conform check` - prints the following details about each repository: output of `git status -s` and ahead/behind commit metrics between local and remote branches
-
-Type `git conform --help`, `git conform -h` or `git conform help` to get more details. Also, you can get more comprehensive info about specific subcommand like this: `git conform help <subcommand>`.
+<br></br>
+- `git conform add` - adds specified repositories for tracking
+<br></br>
+- `git conform rm` - removes specified repositories from tracking
+  - `-a, --all` - remove all repositories from tracking
+<br></br>
+- `git conform check` - inspects specified repositories
+  - `-a, --all` - inspect all tracked repositories
+  - `-s, --status` - print only the output of `git status -s`
+  - `-r, --remotes` - print only the ahead/behind commit metrics
+<br></br>
+Type `git conform help` or `git conform -h` to get more details. Also, you can get more comprehensive info about specific subcommand like this: `git conform help <subcommand>`.
