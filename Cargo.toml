@@ -1,7 +1,7 @@
 [package]
 name = "git-conform"
 version = "0.2.0"
-edition = "2021"
+edition = "2024"
 description = "Keep track of your local git repositories"
 repository = "https://github.com/ndr3www/git-conform"
 license = "MIT"
@@ -10,16 +10,16 @@ keywords = ["git", "tracker", "cli"]
 categories = ["command-line-utilities", "development-tools", "visualization"]
 
 [dependencies]
-tokio = { version = "1.44.2", features = ["full"] }
-clap = { version = "4.5.37", features = ["derive"] }
-indicatif = "0.17.11"
+tokio = { version = "1.50.0", features = ["full"] }
+clap = { version = "4.6.0", features = ["derive"] }
+indicatif = "0.18.4"
 walkdir = "2"
-home = "0.5.11"
+home = "0.5.12"
 wait-timeout = "0.2.1"
 colored = "3"
 
 [dev-dependencies]
-serial_test = "3.2.0"
+serial_test = "3.4.0"
 
 [lints.clippy]
 suspicious = "warn"
