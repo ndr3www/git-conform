@@ -338,7 +338,7 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
 
     // Put the local branch name at the beginning if the output isn't empty
     if !output.is_empty() {
-        output.insert_str(0, format!("  {branch}\n").as_str());
+        output.insert_str(0, format!("  {}:\n", branch.underline()).as_str());
     }
 
     Ok(output)
