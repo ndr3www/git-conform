@@ -300,6 +300,8 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
 
         // Skip if the remote branch doesn't exist
         if git_rev_list_str.is_empty() {
+            writeln!(output, "    missing on '{remote}' remote")
+                .map_err(|e| e.to_string())?;
             continue;
         }
 
