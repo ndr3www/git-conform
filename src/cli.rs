@@ -34,7 +34,11 @@ pub enum Commands {
         /// Allow scanning hidden directories
         #[arg(long)]
         #[arg(default_value_t = false)]
-        hidden: bool
+        hidden: bool,
+        /// Suppress information messages
+        #[arg(short, long)]
+        #[arg(default_value_t = false)]
+        quiet: bool
     },
     /// Print the list of tracked repositories
     List,

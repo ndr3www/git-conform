@@ -18,7 +18,7 @@ fn case_scan_dirs_hidden() {
     }
 
     // The function executes without errors
-    assert_eq!(scan_dirs(vec![tests_dir.to_string()], &tracking_file, true), Ok(()));
+    assert!(scan_dirs(vec![tests_dir.to_string()], &tracking_file, true).is_ok());
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(tracking_file.path).unwrap();
@@ -61,7 +61,7 @@ fn case_scan_dirs_no_hidden() {
     }
 
     // The function executes without errors
-    assert_eq!(scan_dirs(vec![tests_dir.to_string()], &tracking_file, false), Ok(()));
+    assert!(scan_dirs(vec![tests_dir.to_string()], &tracking_file, false).is_ok());
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(tracking_file.path).unwrap();
@@ -132,7 +132,7 @@ fn case_scan_all() {
     }
 
     // The function executes without errors
-    assert_eq!(scan_all(home_dir, &tracking_file, true), Ok(()));
+    assert!(scan_all(home_dir, &tracking_file, true).is_ok());
 
     // Read the updated tracking file
     let track_file_up = fs::read_to_string(tracking_file.path).unwrap();
@@ -164,3 +164,92 @@ fn case_scan_all() {
     }
 }
 
+#[test]
+#[serial]
+fn case_scan_dirs_found_new() {
+    let (_home_dir, tracking_file, tests_dir) = common::setup().unwrap();
+
+    // Remove the tracking file if it already exists
+    if Path::new(tracking_file.path.as_str()).try_exists().unwrap() {
+        fs::remove_file(&tracking_file.path).unwrap();
+    }
+
+    // The returned string contains newly found repositories 
+    
+    let repos = scan_dirs(vec![tests_dir.to_string()], &tracking_file, true).unwrap();
+
+    for n in 1..=3 {
+        assert!(repos.contains(
+            format!("{tests_dir}/repo{n}").as_str()
+        ));
+        assert!(repos.contains(
+            format!("{tests_dir}/.hidden/repo{n}").as_str()
+        ));
+    }
+}
+
+#[test]
+#[serial]
+fn case_scan_dirs_found_none() {
+    let (_home_dir, mut tracking_file, tests_dir) = common::setup().unwrap();
+
+    // Remove the tracking file if it already exists
+    if Path::new(tracking_file.path.as_str()).try_exists().unwrap() {
+        fs::remove_file(&tracking_file.path).unwrap();
+    }
+
+    let dirs = vec![tests_dir.to_string()];
+
+    // Create and populate the tracking file 
+    scan_dirs(dirs.clone(), &tracking_file, true).unwrap();
+
+    // Update the tracking file contents
+    tracking_file.contents = fs::read_to_string(&tracking_file.path).unwrap();
+
+    // The returned string doesn't contain any repositories
+    assert!(scan_dirs(dirs, &tracking_file, true).unwrap().is_empty());
+}
+
+#[test]
+#[serial]
+fn case_scan_all_found_new() {
+    let (home_dir, tracking_file, tests_dir) = common::setup().unwrap();
+
+    // Remove the tracking file if it already exists
+    if Path::new(tracking_file.path.as_str()).try_exists().unwrap() {
+        fs::remove_file(&tracking_file.path).unwrap();
+    }
+
+    // The returned string contains newly found repositories 
+    
+    let repos = scan_all(home_dir, &tracking_file, true).unwrap();
+
+    for n in 1..=3 {
+        assert!(repos.contains(
+            format!("{tests_dir}/repo{n}").as_str()
+        ));
+        assert!(repos.contains(
+            format!("{tests_dir}/.hidden/repo{n}").as_str()
+        ));
+    }
+}
+
+#[test]
+#[serial]
+fn case_scan_all_found_none() {
+    let (home_dir, mut tracking_file, _tests_dir) = common::setup().unwrap();
+
+    // Remove the tracking file if it already exists
+    if Path::new(tracking_file.path.as_str()).try_exists().unwrap() {
+        fs::remove_file(&tracking_file.path).unwrap();
+    }
+
+    // Create and populate the tracking file 
+    scan_all(home_dir.clone(), &tracking_file, true).unwrap();
+
+    // Update the tracking file contents
+    tracking_file.contents = fs::read_to_string(&tracking_file.path).unwrap();
+
+    // The returned string doesn't contain any repositories
+    assert!(scan_all(home_dir, &tracking_file, true).unwrap().is_empty());
+}
