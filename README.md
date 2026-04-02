@@ -39,4 +39,5 @@ bash <(curl -sSL https://raw.githubusercontent.com/ndr3www/git-conform/main/setu
   - `-s, --status` - print only the output of `git status -s`
   - `-r, --remotes` - print only the ahead/behind commit metrics
 <br></br>
+
 Type `git conform help` or `git conform -h` to get more details. Also, you can get more comprehensive info about specific subcommand like this: `git conform help <subcommand>`.
