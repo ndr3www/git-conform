@@ -16,6 +16,7 @@ indicatif = "0.17.11"
 walkdir = "2"
 home = "0.5.11"
 wait-timeout = "0.2.1"
+colored = "3"
 
 [dev-dependencies]
 serial_test = "3.2.0"

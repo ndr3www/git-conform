@@ -25,6 +25,7 @@ use std::io::Write as _;
 use std::fmt::Write as _;
 
 use clap::Parser;
+use colored::Colorize;
 
 #[tokio::main]
 async fn main() {
@@ -107,7 +108,7 @@ async fn main() {
                         }
                         else {
                             println!("{APP_NAME}: Found untracked repositories:\n");
-                            print!("{repos}");
+                            print!("{}", repos.bold());
                         }
                     }
                 },

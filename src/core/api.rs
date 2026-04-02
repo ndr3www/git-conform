@@ -18,6 +18,8 @@ use std::fs::{self, OpenOptions};
 use std::io::Write as _;
 use std::path::Path;
 
+use colored::Colorize;
+
 /// Scans only specified directories
 pub fn scan_dirs(mut dirs: Vec<String>, tracking_file: &TrackingFile, scan_hidden: bool) -> Result<String, String> {
     // Remove duplicates
@@ -82,7 +84,7 @@ pub fn list(track_file_contents: &str) -> Result<(), String> {
         return Err(String::from("No repository is being tracked"));
     }
 
-    print!("{track_file_contents}");
+    print!("{}", track_file_contents.bold());
 
     Ok(())
 }

@@ -18,6 +18,7 @@ use std::sync::{Arc, Mutex};
 use walkdir::{WalkDir, DirEntry};
 use wait_timeout::ChildExt;
 use indicatif::{MultiProgress, ProgressBar};
+use colored::Colorize;
 
 // Searches recursively in dirs for untracked git repositories and automatically adds them to the tracking file
 #[allow(clippy::redundant_closure_for_method_calls)]
@@ -121,7 +122,7 @@ pub async fn exec_async_check(repos: Vec<String>, flags: Vec<bool>) -> Result<()
 
         tasks.push(tokio::spawn(async move {
             let spinner = multi_prog_clone.add(ProgressBar::new_spinner());
-            spinner.set_message(repo.clone());
+            spinner.set_message(repo.bold().to_string());
             spinner.enable_steady_tick(Duration::from_millis(SPINNER_TICK));
 
             match inspect_repo(repo.as_str(), flags_clone.as_slice()) {
@@ -242,7 +243,7 @@ fn inspect_repo(repo: &str, flags: &[bool]) -> Result<String, String> {
 
     // Assign the info to the final output only if there are any pending changes
     if !status_output.is_empty() || !remotes_output.is_empty() {
-        final_output = format!("\r{repo}\n{status_output}{remotes_output}");
+        final_output = format!("\r{}\n{status_output}{remotes_output}", repo.bold());
     }
 
     Ok(final_output)
