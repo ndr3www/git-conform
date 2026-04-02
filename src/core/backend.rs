@@ -280,7 +280,7 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
     let mut output = String::new();
 
     for remote in remotes {
-        let remote = format!("{remote}/{branch}");
+        let remote_branch = format!("{remote}/{branch}");
 
         // Get the difference between the remote and local branch
         let git_rev_list_out = Command::new("git")
@@ -290,7 +290,7 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
                 "rev-list",
                 "--left-right",
                 "--count",
-                format!("{remote}...{branch}").as_str()
+                format!("{remote_branch}...{branch}").as_str()
             ])
             .stderr(Stdio::null())
             .output()
@@ -321,18 +321,18 @@ fn remotes_diff(repo: &str, branch: &str, remotes: Vec<&str>) -> Result<String, 
         }
 
         if ahead == 0 {
-            writeln!(output, "    {behind} commit(s) behind {remote}")
+            writeln!(output, "    {behind} commit(s) behind {remote_branch}")
                 .map_err(|e| e.to_string())?;
             continue;
         }
 
         if behind == 0 {
-            writeln!(output, "    {ahead} commit(s) ahead of {remote}")
+            writeln!(output, "    {ahead} commit(s) ahead of {remote_branch}")
                 .map_err(|e| e.to_string())?;
             continue;
         }
 
-        writeln!(output, "    {ahead} commit(s) ahead of, {behind} commit(s) behind {remote}")
+        writeln!(output, "    {ahead} commit(s) ahead of, {behind} commit(s) behind {remote_branch}")
             .map_err(|e| e.to_string())?;
     }
 
