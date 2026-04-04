@@ -8,7 +8,8 @@
 ## About
 `git-conform` is a simple git extension that helps you to keep track of the repositories on your local machine and their remote counterparts.
 It works by scanning your **home directory** (or just the ones you specified) in search for git repositories, and then storing their paths in
-the tracking file located at `~/.local/share/git-conform`. By typing `git conform check --all` you can see uncommitted changes and unsynced commits between local and remote branches from all the repositories on your machine at once.
+the tracking file located at `~/.local/share/git-conform`. By typing `git conform check --all` you can see useful information
+about all the repositories on your machine at once such as uncommitted changes or unsynced commits between local and remote branches.
 
 ## Installation
 
@@ -26,6 +27,7 @@ bash <(curl -sSL https://raw.githubusercontent.com/ndr3www/git-conform/main/setu
 - `git conform scan` - searches for untracked repositories and automatically adds them for tracking
   - `-a, --all` - scan all directories in your /home
   - `--hidden` - allow scanning hidden directories
+  - `-q, --quiet` - suppress information messages
 <br></br>
 - `git conform list` - prints the list of tracked repositories
 <br></br>
@@ -37,7 +39,7 @@ bash <(curl -sSL https://raw.githubusercontent.com/ndr3www/git-conform/main/setu
 - `git conform check` - inspects specified repositories
   - `-a, --all` - inspect all tracked repositories
   - `-s, --status` - print only the output of `git status -s`
-  - `-r, --remotes` - print only the ahead/behind commit metrics
+  - `-r, --remotes` - print only the differences between local repositories and their remotes
 <br></br>
 
 Type `git conform help` or `git conform -h` to get more details. Also, you can get more comprehensive info about specific subcommand like this: `git conform help <subcommand>`.
