@@ -6,7 +6,7 @@ YELLOW='\033[0;33m'
 NC='\033[0m'
 
 # Global constants
-REPO_URL="https://github.com/ndr3www/git-conform"
+REPO_URL="https://github.com/j3dr/git-conform"
 BIN_PATH="/usr/bin/git-conform"
 LOCAL_SHARE_PATH="$HOME/.local/share/git-conform"
 
