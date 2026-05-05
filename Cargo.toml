@@ -1,6 +1,6 @@
 [package]
 name = "git-conform"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 description = "Keep track of your local git repositories"
 repository = "https://github.com/ndr3www/git-conform"
