@@ -20,7 +20,7 @@ about all the repositories on your machine at once such as uncommitted changes o
 > [!IMPORTANT]  
 > Before continuing, make sure you have `wget` and `curl` installed on your system
 ```bash
-bash <(curl -sSL https://raw.githubusercontent.com/ndr3www/git-conform/main/setup.sh)
+bash <(curl -sSL https://raw.githubusercontent.com/j3dr/git-conform/main/setup.sh)
 ```
 
 ## Available commands and options
